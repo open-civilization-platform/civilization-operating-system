@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civilization OS | Social</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+    <nav class="nav-bar glass-morphism">
+        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
+        <div class="nav-links">
+            <a th:href="@{/}">Dashboard</a><a th:href="@{/biosphere}">Biosphere</a>
+            <a th:href="@{/resources}">Resources</a><a th:href="@{/needs}">Needs</a>
+            <a th:href="@{/strategy}">Strategy</a><a th:href="@{/production}">Production</a>
+            <a th:href="@{/logistics}">Logistics</a><a th:href="@{/constitution}">Constitution</a>
+            <a th:href="@{/purpose}">Purpose</a><a th:href="@{/social}" class="active">Social</a><a th:href="@{/simulation}">Cortex</a>
+        </div>
+    </nav>
+    <main class="main-content">
+        <header class="page-header"><h1 class="glow-text">🤝 Social Stability</h1><p class="subtitle">Community Health & Incident Management</p></header>
+        <section class="card glass-morphism" th:if="${incidents != null && !incidents.isEmpty()}">
+            <h2>Incidents</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Type</th><th>Description</th><th>Region</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr th:each="i : ${incidents}">
+                            <td th:text="${i.type}">—</td>
+                            <td th:text="${i.description}">—</td>
+                            <td th:text="${i.region}">—</td>
+                            <td><span class="badge" th:classappend="${i.status == 'REPORTED' ? 'badge-critical' : 'badge-normal'}" th:text="${i.status}">—</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="card glass-morphism" th:if="${cases != null && !cases.isEmpty()}">
+            <h2>Cases</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Title</th><th>Description</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c : ${cases}">
+                            <td th:text="${c.title}">—</td>
+                            <td th:text="${c.description}">—</td>
+                            <td><span class="badge badge-normal" th:text="${c.status}">—</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <div class="empty-state" th:if="${(incidents == null || incidents.isEmpty()) && (cases == null || cases.isEmpty())}"><p>No incidents or cases recorded. Community is stable.</p></div>
+    </main>
+    <footer class="footer glass-morphism"><p>&copy; 2026 Civilization Operating System</p></footer>
+</body>
+</html>

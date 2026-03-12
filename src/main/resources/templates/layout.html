@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Civilization Operating System — A Resource-Based Economy Platform">
+    <title th:text="'Civilization OS | ' + ${pageTitle ?: 'Dashboard'}">Civilization OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+    <nav class="nav-bar glass-morphism">
+        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
+        <div class="nav-links">
+            <a th:href="@{/}" th:classappend="${#strings.equals(currentPage, 'dashboard')} ? 'active' : ''">Dashboard</a>
+            <a th:href="@{/biosphere}" th:classappend="${#strings.equals(currentPage, 'biosphere')} ? 'active' : ''">Biosphere</a>
+            <a th:href="@{/resources}" th:classappend="${#strings.equals(currentPage, 'resources')} ? 'active' : ''">Resources</a>
+            <a th:href="@{/needs}" th:classappend="${#strings.equals(currentPage, 'needs')} ? 'active' : ''">Needs</a>
+            <a th:href="@{/strategy}" th:classappend="${#strings.equals(currentPage, 'strategy')} ? 'active' : ''">Strategy</a>
+            <a th:href="@{/production}" th:classappend="${#strings.equals(currentPage, 'production')} ? 'active' : ''">Production</a>
+            <a th:href="@{/logistics}" th:classappend="${#strings.equals(currentPage, 'logistics')} ? 'active' : ''">Logistics</a>
+            <a th:href="@{/constitution}" th:classappend="${#strings.equals(currentPage, 'constitution')} ? 'active' : ''">Constitution</a>
+            <a th:href="@{/purpose}" th:classappend="${#strings.equals(currentPage, 'purpose')} ? 'active' : ''">Purpose</a>
+            <a th:href="@{/social}" th:classappend="${#strings.equals(currentPage, 'social')} ? 'active' : ''">Social</a>
+            <a th:href="@{/simulation}" th:classappend="${#strings.equals(currentPage, 'simulation')} ? 'active' : ''">Cortex</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div th:replace="~{${viewName} :: content}">Content goes here</div>
+    </main>
+
+    <footer class="footer glass-morphism">
+        <p>&copy; 2026 Civilization Operating System — Open Civilization Platform</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civilization OS | Cortex Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+    <nav class="nav-bar glass-morphism">
+        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
+        <div class="nav-links">
+            <a th:href="@{/}">Dashboard</a><a th:href="@{/biosphere}">Biosphere</a>
+            <a th:href="@{/resources}">Resources</a><a th:href="@{/needs}">Needs</a>
+            <a th:href="@{/strategy}">Strategy</a><a th:href="@{/production}">Production</a>
+            <a th:href="@{/logistics}">Logistics</a><a th:href="@{/constitution}">Constitution</a>
+            <a th:href="@{/purpose}">Purpose</a><a th:href="@{/social}">Social</a><a th:href="@{/simulation}" class="active">Cortex</a>
+        </div>
+    </nav>
+    <main class="main-content">
+        <header class="page-header"><h1 class="glow-text">🧠 Cortex Simulation Engine</h1><p class="subtitle">AI-Driven Decision Engine</p></header>
+        <section class="card glass-morphism" th:if="${status != null}">
+            <h2>Engine Status</h2>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Engine</span>
+                    <span class="stat-value" th:text="${status.engine}">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Active Rules</span>
+                    <span class="stat-value accent" th:text="${status.activeRulesCount}">0</span>
+                </div>
+            </div>
+        </section>
+        <section class="card glass-morphism" th:if="${status != null}">
+            <h2>Last Decision</h2>
+            <p th:text="${status.lastDecision}" style="color: var(--accent-cyan); font-family: monospace; font-size: 0.9rem;">—</p>
+        </section>
+        <section class="card glass-morphism" th:if="${status != null && status.monitoredCategories != null && !status.monitoredCategories.isEmpty()}">
+            <h2>Monitored Categories</h2>
+            <ul class="data-list">
+                <li th:each="cat : ${status.monitoredCategories}" th:text="${cat}">—</li>
+            </ul>
+        </section>
+        <div class="empty-state" th:if="${status == null}"><p>Cortex engine not initialized.</p></div>
+    </main>
+    <footer class="footer glass-morphism"><p>&copy; 2026 Civilization Operating System</p></footer>
+</body>
+</html>

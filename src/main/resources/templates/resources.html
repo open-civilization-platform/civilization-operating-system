@@ -1,43 +1,23 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civilization OS | Resources</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-</head>
-<body>
-    <nav class="nav-bar glass-morphism">
-        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
-        <div class="nav-links">
-            <a th:href="@{/}">Dashboard</a><a th:href="@{/biosphere}">Biosphere</a>
-            <a th:href="@{/resources}" class="active">Resources</a><a th:href="@{/needs}">Needs</a>
-            <a th:href="@{/strategy}">Strategy</a><a th:href="@{/production}">Production</a>
-            <a th:href="@{/logistics}">Logistics</a><a th:href="@{/constitution}">Constitution</a>
-            <a th:href="@{/purpose}">Purpose</a><a th:href="@{/social}">Social</a><a th:href="@{/simulation}">Cortex</a>
+<div th:fragment="content">
+    <header class="page-header">
+        <h1 class="glow-text">Global Resources</h1>
+        <p class="subtitle">Planetary Resource Ledger</p>
+    </header>
+    <section class="card glass-morphism animate" th:if="${resources != null && !resources.isEmpty()}">
+        <h2>Stock Registry</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Resource</th><th>Type</th><th>Quantity</th><th>Unit</th></tr></thead>
+                <tbody>
+                    <tr th:each="r : ${resources}">
+                        <td th:text="${r.name}">—</td>
+                        <td th:text="${r.type}">—</td>
+                        <td th:text="${#numbers.formatDecimal(r.quantity, 1, 2)}">0</td>
+                        <td th:text="${r.unit}">—</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </nav>
-    <main class="main-content">
-        <header class="page-header"><h1 class="glow-text">⚡ Global Resources</h1><p class="subtitle">Resource Mapping & Inventory</p></header>
-        <section class="card glass-morphism" th:if="${resources != null && !resources.isEmpty()}">
-            <h2>Resource Inventory</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Name</th><th>Type</th><th>Quantity</th><th>Unit</th></tr></thead>
-                    <tbody>
-                        <tr th:each="r : ${resources}">
-                            <td th:text="${r.name}">—</td>
-                            <td th:text="${r.type}">—</td>
-                            <td th:text="${r.quantity}">0</td>
-                            <td th:text="${r.unit}">—</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <div class="empty-state" th:if="${resources == null || resources.isEmpty()}"><p>No resources mapped yet.</p></div>
-    </main>
-    <footer class="footer glass-morphism"><p>&copy; 2026 Civilization Operating System</p></footer>
-</body>
-</html>
+    </section>
+    <div class="empty-state animate" th:if="${resources == null || resources.isEmpty()}"><p>Resource mapping in progress.</p></div>
+</div>

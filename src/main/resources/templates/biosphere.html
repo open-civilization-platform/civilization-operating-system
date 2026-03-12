@@ -1,49 +1,23 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civilization OS | Biosphere</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-</head>
-<body>
-    <nav class="nav-bar glass-morphism">
-        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
-        <div class="nav-links">
-            <a th:href="@{/}">Dashboard</a>
-            <a th:href="@{/biosphere}" class="active">Biosphere</a>
-            <a th:href="@{/resources}">Resources</a>
-            <a th:href="@{/needs}">Needs</a>
-            <a th:href="@{/strategy}">Strategy</a>
-            <a th:href="@{/production}">Production</a>
-            <a th:href="@{/logistics}">Logistics</a>
-            <a th:href="@{/constitution}">Constitution</a>
-            <a th:href="@{/purpose}">Purpose</a>
-            <a th:href="@{/social}">Social</a>
-            <a th:href="@{/simulation}">Cortex</a>
+<div th:fragment="content">
+    <header class="page-header">
+        <h1 class="glow-text">Biosphere Monitoring</h1>
+        <p class="subtitle">Environmental Health Metrics</p>
+    </header>
+    <section class="card glass-morphism animate" th:if="${metrics != null && !metrics.isEmpty()}">
+        <h2>Status Matrix</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Metric</th><th>Current Value</th><th>Unit</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${metrics}">
+                        <td th:text="${m.name}">—</td>
+                        <td th:text="${m.value}">0</td>
+                        <td th:text="${m.unit}">—</td>
+                        <td><span class="badge" th:classappend="${m.status == 'CRITICAL' ? 'badge-critical' : 'badge-normal'}" th:text="${m.status}">OK</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </nav>
-    <main class="main-content">
-        <header class="page-header"><h1 class="glow-text">🌍 Biosphere Monitoring</h1><p class="subtitle">Environmental Health Metrics</p></header>
-        <section class="card glass-morphism" th:if="${metrics != null && !metrics.isEmpty()}">
-            <h2>Metrics</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Name</th><th>Value</th><th>Unit</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <tr th:each="m : ${metrics}">
-                            <td th:text="${m.name}">—</td>
-                            <td th:text="${m.value}">0</td>
-                            <td th:text="${m.unit}">—</td>
-                            <td><span class="badge" th:classappend="${m.status == 'CRITICAL' ? 'badge-critical' : 'badge-normal'}" th:text="${m.status}">OK</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <div class="empty-state" th:if="${metrics == null || metrics.isEmpty()}"><p>No biosphere metrics recorded yet.</p></div>
-    </main>
-    <footer class="footer glass-morphism"><p>&copy; 2026 Civilization Operating System</p></footer>
-</body>
-</html>
+    </section>
+    <div class="empty-state animate" th:if="${metrics == null || metrics.isEmpty()}"><p>No biosphere sensors active.</p></div>
+</div>

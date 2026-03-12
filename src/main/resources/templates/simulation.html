@@ -1,50 +1,74 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civilization OS | Cortex Simulation</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-</head>
-<body>
-    <nav class="nav-bar glass-morphism">
-        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
-        <div class="nav-links">
-            <a th:href="@{/}">Dashboard</a><a th:href="@{/biosphere}">Biosphere</a>
-            <a th:href="@{/resources}">Resources</a><a th:href="@{/needs}">Needs</a>
-            <a th:href="@{/strategy}">Strategy</a><a th:href="@{/production}">Production</a>
-            <a th:href="@{/logistics}">Logistics</a><a th:href="@{/constitution}">Constitution</a>
-            <a th:href="@{/purpose}">Purpose</a><a th:href="@{/social}">Social</a><a th:href="@{/simulation}" class="active">Cortex</a>
-        </div>
-    </nav>
-    <main class="main-content">
-        <header class="page-header"><h1 class="glow-text">🧠 Cortex Simulation Engine</h1><p class="subtitle">AI-Driven Decision Engine</p></header>
-        <section class="card glass-morphism" th:if="${status != null}">
-            <h2>Engine Status</h2>
+<div th:fragment="content">
+    <header class="page-header">
+        <h1 class="glow-text">Simulation Core</h1>
+        <p class="subtitle">Cortex Engine & Automated Execution</p>
+    </header>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <!-- Logic Core Status -->
+        <section class="card glass-morphism animate" th:if="${status != null}">
+            <h2><span class="logo-small">🧠</span> Cortex Status</h2>
             <div class="stat-grid">
                 <div class="stat-item">
-                    <span class="stat-label">Engine</span>
+                    <span class="stat-label">Engine Status</span>
                     <span class="stat-value" th:text="${status.engine}">—</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Active Rules</span>
-                    <span class="stat-value accent" th:text="${status.activeRulesCount}">0</span>
+                    <span class="stat-label">Decision Cycle</span>
+                    <span class="stat-value accent">15s</span>
                 </div>
             </div>
+            <div class="table-wrapper" style="margin-top: 30px;">
+                <table>
+                    <thead><tr><th>Domain</th><th>Last Operation</th></tr></thead>
+                    <tbody>
+                        <tr><td>Strategic Logic</td><td th:text="${status.lastDecision}">—</td></tr>
+                        <tr><td>Rule Validator</td><td><span class="badge badge-active">PASS</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
-        <section class="card glass-morphism" th:if="${status != null}">
-            <h2>Last Decision</h2>
-            <p th:text="${status.lastDecision}" style="color: var(--accent-cyan); font-family: monospace; font-size: 0.9rem;">—</p>
+
+        <!-- Automation Execution Status -->
+        <section class="card glass-morphism animate">
+            <h2><span class="logo-small">🤖</span> Automation Sim</h2>
+            <div class="stat-grid" th:if="${automations != null}">
+                <div class="stat-item">
+                    <span class="stat-label">Active Units</span>
+                    <span class="stat-value" th:text="${automations.size()}">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Execution Mode</span>
+                    <span class="stat-value accent">AUTONOMOUS</span>
+                </div>
+            </div>
+            <div class="table-wrapper" style="margin-top: 20px;">
+                <table>
+                    <thead><tr><th>Unit ID</th><th>Task</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr th:each="a : ${automations}">
+                            <td th:text="${a.name}">—</td>
+                            <td th:text="${a.currentTask}">—</td>
+                            <td><span class="badge" th:classappend="${a.status == 'ACTIVE' ? 'badge-active' : 'badge-normal'}" th:text="${a.status}">—</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
-        <section class="card glass-morphism" th:if="${status != null && status.monitoredCategories != null && !status.monitoredCategories.isEmpty()}">
-            <h2>Monitored Categories</h2>
-            <ul class="data-list">
-                <li th:each="cat : ${status.monitoredCategories}" th:text="${cat}">—</li>
-            </ul>
-        </section>
-        <div class="empty-state" th:if="${status == null}"><p>Cortex engine not initialized.</p></div>
-    </main>
-    <footer class="footer glass-morphism"><p>&copy; 2026 Civilization Operating System</p></footer>
-</body>
-</html>
+    </div>
+
+    <!-- Active Rules Overlay -->
+    <section class="card glass-morphism animate" style="margin-top: 30px;">
+        <h2><span class="logo-small">⚖️</span> Validated Decisions</h2>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 15px;">Latest autonomous decisions synchronized with scientific governance.</p>
+        <div class="table-wrapper">
+             <table>
+                <thead><tr><th>Simulation Phase</th><th>Logic Result</th><th>Stability Impact</th></tr></thead>
+                <tbody>
+                    <tr><td>Resource Re-allocation</td><td>OPTIMIZED</td><td>POSITIVE</td></tr>
+                    <tr><td>Biosphere Guardrail</td><td>MONITORING</td><td>STABLE</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

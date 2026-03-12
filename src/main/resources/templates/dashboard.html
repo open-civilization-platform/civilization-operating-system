@@ -1,129 +1,164 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Civilization Operating System — Resource-Based Economy Dashboard">
-    <title>Civilization OS | Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-</head>
-<body>
-    <nav class="nav-bar glass-morphism">
-        <a th:href="@{/}" class="nav-brand glow-text">CIV:OS</a>
-        <div class="nav-links">
-            <a th:href="@{/}" class="active">Dashboard</a>
-            <a th:href="@{/biosphere}">Biosphere</a>
-            <a th:href="@{/resources}">Resources</a>
-            <a th:href="@{/needs}">Needs</a>
-            <a th:href="@{/strategy}">Strategy</a>
-            <a th:href="@{/production}">Production</a>
-            <a th:href="@{/logistics}">Logistics</a>
-            <a th:href="@{/constitution}">Constitution</a>
-            <a th:href="@{/purpose}">Purpose</a>
-            <a th:href="@{/social}">Social</a>
-            <a th:href="@{/simulation}">Cortex</a>
-        </div>
-    </nav>
+<div th:fragment="content">
+    <header class="page-header">
+        <h1 class="glow-text">CIVILIZATION OS <span style="font-size: 2rem; vertical-align: middle; color: var(--accent-cyan);">V1.0</span></h1>
+        <p class="subtitle">Planetary Resource Management System | Socioeconomic Technical Architecture</p>
+    </header>
 
-    <main class="main-content">
-        <header class="page-header">
-            <h1 class="glow-text">Civilization Operating System</h1>
-            <p class="subtitle">Resource-Based Economy — Real-Time Dashboard</p>
-        </header>
+    <!-- Layer Grid: 01 to 08 -->
+    <div class="layer-grid">
+        <!-- Layer 01 -->
+        <a th:href="@{/biosphere}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 01</span>
+                    <h3 class="layer-title"><i data-lucide="globe" style="width: 18px; color: var(--accent-blue);"></i> REALITY (BIOSPHERE)</h3>
+                    <span class="layer-subtitle">Planetary Health & Resources</span>
+                </div>
+            </div>
+            <div class="layer-status status-active">
+                <span class="status-dot"></span> ACTIVE
+            </div>
+            <i data-lucide="globe" class="ghost-icon"></i>
+        </a>
 
-        <!-- Simulation Status -->
-        <section class="card glass-morphism" th:if="${simulationStatus != null}">
-            <h2>Cortex Engine</h2>
-            <div class="stat-grid">
-                <div class="stat-item">
-                    <span class="stat-label">Engine</span>
-                    <span class="stat-value" th:text="${simulationStatus.engine}">—</span>
+        <!-- Layer 02 -->
+        <a th:href="@{/resources}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 02</span>
+                    <h3 class="layer-title"><i data-lucide="activity" style="width: 18px; color: var(--green);"></i> KNOWLEDGE</h3>
+                    <span class="layer-subtitle">Scientific Analytics</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Active Rules</span>
-                    <span class="stat-value accent" th:text="${simulationStatus.activeRulesCount}">0</span>
+            </div>
+            <div class="layer-status status-active">
+                <span class="status-dot"></span> ACTIVE
+            </div>
+            <i data-lucide="activity" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 03 -->
+        <a th:href="@{/simulation}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 03</span>
+                    <h3 class="layer-title"><i data-lucide="cpu" style="width: 18px; color: #bf00ff;"></i> SIMULATION</h3>
+                    <span class="layer-subtitle">Cortex Predictive Engine</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Last Decision</span>
-                    <span class="stat-value small" th:text="${simulationStatus.lastDecision}">—</span>
+            </div>
+            <div class="layer-status status-running">
+                <span class="status-dot"></span> RUNNING
+            </div>
+            <i data-lucide="brain" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 04 -->
+        <a th:href="@{/production}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 04</span>
+                    <h3 class="layer-title"><i data-lucide="settings" style="width: 18px; color: var(--accent-cyan);"></i> DECISION</h3>
+                    <span class="layer-subtitle">Constitutional Orchestration</span>
+                </div>
+            </div>
+            <div class="layer-status status-optimizing">
+                <span class="status-dot"></span> OPTIMIZING
+            </div>
+            <i data-lucide="settings" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 05 -->
+        <a th:href="@{/constitution}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 05</span>
+                    <h3 class="layer-title"><i data-lucide="shield-check" style="width: 18px; color: #ffcc00;"></i> GOVERNANCE</h3>
+                    <span class="layer-subtitle">Scientific Consensus</span>
+                </div>
+            </div>
+            <div class="layer-status status-active">
+                <span class="status-dot"></span> AUDITED
+            </div>
+            <i data-lucide="shield" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 06 -->
+        <a th:href="@{/social}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 06</span>
+                    <h3 class="layer-title"><i data-lucide="heart" style="width: 18px; color: var(--red);"></i> SOCIAL SUPPORT</h3>
+                    <span class="layer-subtitle">Stable Justice & Rehabilitation</span>
+                </div>
+            </div>
+            <div class="layer-status status-active">
+                <span class="status-dot"></span> ACTIVE
+            </div>
+            <i data-lucide="heart" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 07 -->
+        <a th:href="@{/purpose}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 07</span>
+                    <h3 class="layer-title"><i data-lucide="rocket" style="width: 18px; color: #ff0077;"></i> HUMAN PURPOSE</h3>
+                    <span class="layer-subtitle">Collective Contribution</span>
+                </div>
+            </div>
+            <div class="layer-status status-vibrant">
+                <span class="status-dot"></span> VIBRANT
+            </div>
+            <i data-lucide="rocket" class="ghost-icon"></i>
+        </a>
+
+        <!-- Layer 08 -->
+        <a th:href="@{/logistics}" class="layer-card">
+            <div class="layer-header">
+                <div class="layer-info">
+                    <span class="layer-num">LAYER 08</span>
+                    <h3 class="layer-title"><i data-lucide="terminal" style="width: 18px; color: var(--accent-cyan);"></i> AUTOMATION</h3>
+                    <span class="layer-subtitle">Infrastructure Execution Swarms</span>
+                </div>
+            </div>
+            <div class="layer-status status-optimizing">
+                <span class="status-dot"></span> AUTONOMOUS
+            </div>
+            <i data-lucide="cpu" class="ghost-icon"></i>
+        </a>
+    </div>
+
+    <!-- Telemetry Row (Simulating the bottom half of the image) -->
+    <div class="telemetry-row">
+        <section class="card glass-morphism" style="margin-top: 20px; padding: 20px;">
+            <h2 style="font-size: 0.7rem;"><i data-lucide="brain" style="width: 14px; vertical-align: middle;"></i> SIMULATION CORTEX TELEMETRY</h2>
+            <div style="font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--text-secondary);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>ENGINE_STATUS:</span>
+                    <span style="color: var(--green);">SYNCHRONIZED</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>ACTIVE_CONSTITUTIONAL_RULES:</span>
+                    <span style="color: var(--accent-cyan);">8</span>
+                </div>
+                <div>LATEST_AUTONOMOUS_DECISION:</div>
+                <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; border-left: 2px solid var(--accent-cyan); margin-top: 5px;">
+                    "Awaiting simulation cycle..."
                 </div>
             </div>
         </section>
 
-        <!-- Balance Overview -->
-        <section class="card glass-morphism" th:if="${balance != null && !balance.isEmpty()}">
-            <h2>Resource Balance</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Available</th>
-                            <th>Required</th>
-                            <th>% Met</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="b : ${balance}">
-                            <td th:text="${b['category']}">—</td>
-                            <td th:text="${b['available']}">0</td>
-                            <td th:text="${b['required']}">0</td>
-                            <td>
-                                <span class="progress-badge"
-                                      th:classappend="${b['percentageMet'] >= 100 ? 'green' : (b['percentageMet'] >= 50 ? 'yellow' : 'red')}"
-                                      th:text="${#numbers.formatDecimal(b['percentageMet'], 1, 1) + '%'}">0%</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <section class="card glass-morphism" style="margin-top: 20px; padding: 20px; border-color: rgba(255, 204, 0, 0.3);">
+            <h2 style="font-size: 0.7rem; color: #ffcc00;"><i data-lucide="shield-check" style="width: 14px; vertical-align: middle;"></i> GOVERNANCE AUDIT</h2>
+            <div style="font-size: 0.7rem;">
+                <div style="color: #ffcc00; font-weight: 800; margin-bottom: 2px;">GLOBAL BIOSPHERE COMMISSION</div>
+                <div style="color: var(--text-dim); font-style: italic; margin-bottom: 10px;">"Validating CO2 Redline Clause..."</div>
+                
+                <div style="color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">ENERGY & NUTRITION COUNCIL</div>
+                <div style="color: var(--text-muted); font-style: italic; margin-bottom: 15px;">"Audit complete. Reserves verified."</div>
             </div>
+            <button class="glass-morphism" style="width: 100%; padding: 8px; font-size: 0.6rem; color: #ffcc00; border-color: rgba(255, 204, 0, 0.3); cursor: pointer;">
+                REQUEST DATA AUDIT
+            </button>
         </section>
-
-        <!-- Quick Links -->
-        <section class="module-grid">
-            <a th:href="@{/biosphere}" class="module-card glass-morphism">
-                <h3>🌍 Biosphere</h3>
-                <p>Environmental monitoring</p>
-            </a>
-            <a th:href="@{/resources}" class="module-card glass-morphism">
-                <h3>⚡ Resources</h3>
-                <p>Global resource mapping</p>
-            </a>
-            <a th:href="@{/needs}" class="module-card glass-morphism">
-                <h3>🧬 Human Needs</h3>
-                <p>Population requirements</p>
-            </a>
-            <a th:href="@{/production}" class="module-card glass-morphism">
-                <h3>🏭 Production</h3>
-                <p>Facility management</p>
-            </a>
-            <a th:href="@{/logistics}" class="module-card glass-morphism">
-                <h3>🚚 Logistics</h3>
-                <p>Supply chain network</p>
-            </a>
-            <a th:href="@{/constitution}" class="module-card glass-morphism">
-                <h3>📜 Constitution</h3>
-                <p>Digital governance rules</p>
-            </a>
-            <a th:href="@{/purpose}" class="module-card glass-morphism">
-                <h3>🎯 Purpose</h3>
-                <p>Human contribution system</p>
-            </a>
-            <a th:href="@{/social}" class="module-card glass-morphism">
-                <h3>🤝 Social</h3>
-                <p>Community stability</p>
-            </a>
-            <a th:href="@{/simulation}" class="module-card glass-morphism">
-                <h3>🧠 Cortex</h3>
-                <p>Simulation engine</p>
-            </a>
-        </section>
-    </main>
-
-    <footer class="footer glass-morphism">
-        <p>&copy; 2026 Civilization Operating System — Open Civilization Platform</p>
-    </footer>
-</body>
-</html>
+    </div>
+</div>

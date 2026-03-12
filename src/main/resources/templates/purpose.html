@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Contribution</h1>
-        <p class="subtitle">Human Purpose & Project Contribution Ledger</p>
+        <h1 class="glow-text"><i data-lucide="rocket" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Contribution</h1>
+        <p class="subtitle">Human Purpose & Project Contribution Ledger | Collective Impact</p>
     </header>
     <section class="card glass-morphism animate" th:if="${citizens != null && !citizens.isEmpty()}">
-        <h2>Active Citizens</h2>
+        <h2><i data-lucide="users" style="width: 18px; vertical-align: middle;"></i> Active Citizens</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Citizen ID</th><th>Name</th><th>Reputation</th></tr></thead>

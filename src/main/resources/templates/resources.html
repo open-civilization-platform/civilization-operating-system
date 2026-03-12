@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Global Resources</h1>
-        <p class="subtitle">Planetary Resource Ledger</p>
+        <h1 class="glow-text"><i data-lucide="activity" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Global Resources</h1>
+        <p class="subtitle">Planetary Resource Ledger | Automated Inventory System</p>
     </header>
     <section class="card glass-morphism animate" th:if="${resources != null && !resources.isEmpty()}">
-        <h2>Stock Registry</h2>
+        <h2><i data-lucide="database" style="width: 18px; vertical-align: middle;"></i> Stock Registry</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Resource</th><th>Type</th><th>Quantity</th><th>Unit</th></tr></thead>

@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Production Hub</h1>
-        <p class="subtitle">Automated Production Facilities</p>
+        <h1 class="glow-text"><i data-lucide="factory" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Production Hub</h1>
+        <p class="subtitle">Automated Production Facilities | Smart Manufacturing Grid</p>
     </header>
     <section class="card glass-morphism animate" th:if="${facilities != null && !facilities.isEmpty()}">
-        <h2>Active Facilities</h2>
+        <h2><i data-lucide="settings" style="width: 18px; vertical-align: middle;"></i> Active Facilities</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Facility</th><th>Type</th><th>Efficiency</th><th>Output</th><th>Status</th></tr></thead>

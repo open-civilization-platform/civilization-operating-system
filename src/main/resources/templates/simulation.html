@@ -1,13 +1,13 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Simulation Core</h1>
-        <p class="subtitle">Cortex Engine & Automated Execution</p>
+        <h1 class="glow-text"><i data-lucide="brain" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Simulation Core</h1>
+        <p class="subtitle">Cortex Engine & Automated Execution | Predictive Modeling</p>
     </header>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
         <!-- Logic Core Status -->
         <section class="card glass-morphism animate" th:if="${status != null}">
-            <h2><span class="logo-small">🧠</span> Cortex Status</h2>
+            <h2><i data-lucide="brain" style="width: 18px; vertical-align: middle;"></i> Cortex Status</h2>
             <div class="stat-grid">
                 <div class="stat-item">
                     <span class="stat-label">Engine Status</span>
@@ -31,7 +31,7 @@
 
         <!-- Automation Execution Status -->
         <section class="card glass-morphism animate">
-            <h2><span class="logo-small">🤖</span> Automation Sim</h2>
+            <h2><i data-lucide="bot" style="width: 18px; vertical-align: middle;"></i> Automation Sim</h2>
             <div class="stat-grid" th:if="${automations != null}">
                 <div class="stat-item">
                     <span class="stat-label">Active Units</span>
@@ -59,7 +59,7 @@
 
     <!-- Active Rules Overlay -->
     <section class="card glass-morphism animate" style="margin-top: 30px;">
-        <h2><span class="logo-small">⚖️</span> Validated Decisions</h2>
+        <h2><i data-lucide="scale" style="width: 18px; vertical-align: middle;"></i> Validated Decisions</h2>
         <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 15px;">Latest autonomous decisions synchronized with scientific governance.</p>
         <div class="table-wrapper">
              <table>

@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Biosphere Monitoring</h1>
-        <p class="subtitle">Environmental Health Metrics</p>
+        <h1 class="glow-text"><i data-lucide="globe" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Biosphere Monitoring</h1>
+        <p class="subtitle">Environmental Health Metrics | Real-Time Planetary Feedback</p>
     </header>
     <section class="card glass-morphism animate" th:if="${metrics != null && !metrics.isEmpty()}">
-        <h2>Status Matrix</h2>
+        <h2><i data-lucide="bar-chart-3" style="width: 18px; vertical-align: middle;"></i> Status Matrix</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Metric</th><th>Current Value</th><th>Unit</th><th>Status</th></tr></thead>

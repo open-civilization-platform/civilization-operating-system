@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Human Needs</h1>
-        <p class="subtitle">Planetary Requirement Matrix</p>
+        <h1 class="glow-text"><i data-lucide="users" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Human Needs</h1>
+        <p class="subtitle">Planetary Requirement Matrix | Global Demand Orchestration</p>
     </header>
     <section class="card glass-morphism animate" th:if="${needs != null && !needs.isEmpty()}">
-        <h2>Active Demands</h2>
+        <h2><i data-lucide="clipboard-list" style="width: 18px; vertical-align: middle;"></i> Active Demands</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Category</th><th>Region</th><th>Quantity</th><th>Unit</th><th>Status</th></tr></thead>

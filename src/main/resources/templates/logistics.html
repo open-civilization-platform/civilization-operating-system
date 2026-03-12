@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">Logistics</h1>
-        <p class="subtitle">Global Resource Distribution Network</p>
+        <h1 class="glow-text"><i data-lucide="truck" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>Logistics</h1>
+        <p class="subtitle">Global Resource Distribution Network | Supply Chain Orchestration</p>
     </header>
     <section class="card glass-morphism animate" th:if="${shipments != null && !shipments.isEmpty()}">
-        <h2>Active Transfers</h2>
+        <h2><i data-lucide="box" style="width: 18px; vertical-align: middle;"></i> Active Transfers</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Origin</th><th>Destination</th><th>Cargo</th><th>Quantity</th><th>Status</th></tr></thead>

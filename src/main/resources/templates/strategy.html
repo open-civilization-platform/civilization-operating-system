@@ -1,10 +1,10 @@
 <div th:fragment="content">
     <header class="page-header">
-        <h1 class="glow-text">System Strategy</h1>
-        <p class="subtitle">Resource Management & Balance</p>
+        <h1 class="glow-text"><i data-lucide="line-chart" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 15px;"></i>System Strategy</h1>
+        <p class="subtitle">Resource Management & Balance | Dynamic Logic Analysis</p>
     </header>
     <section class="card glass-morphism animate" th:if="${balance != null && !balance.isEmpty()}">
-        <h2>Logic Analysis</h2>
+        <h2><i data-lucide="pie-chart" style="width: 18px; vertical-align: middle;"></i> Logic Analysis</h2>
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Category</th><th>Available</th><th>Required</th><th>Delta</th></tr></thead>

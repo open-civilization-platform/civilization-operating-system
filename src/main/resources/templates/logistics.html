@@ -29,7 +29,7 @@
                         <tr th:each="s : ${shipments}">
                             <td th:text="${s.origin}">—</td>
                             <td th:text="${s.destination}">—</td>
-                            <td th:text="${s.resourceName}">—</td>
+                            <td th:text="${s.cargo}">—</td>
                             <td th:text="${s.quantity}">0</td>
                             <td><span class="badge badge-normal" th:text="${s.status}">—</span></td>
                         </tr>

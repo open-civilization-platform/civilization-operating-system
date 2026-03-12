@@ -24,11 +24,10 @@
             <h2>Rules</h2>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Title</th><th>Category</th><th>Votes</th><th>Status</th><th>Validation</th></tr></thead>
+                    <thead><tr><th>Title</th><th>Votes</th><th>Status</th><th>Validation</th></tr></thead>
                     <tbody>
                         <tr th:each="r : ${rules}">
                             <td th:text="${r.title}">—</td>
-                            <td th:text="${r.category}">—</td>
                             <td th:text="${r.votesCount}">0</td>
                             <td><span class="badge" th:classappend="${r.status == 'ACTIVE' ? 'badge-active' : 'badge-proposed'}" th:text="${r.status}">—</span></td>
                             <td th:text="${r.validationStatus}">—</td>

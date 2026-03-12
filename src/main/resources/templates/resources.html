@@ -24,14 +24,13 @@
             <h2>Resource Inventory</h2>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Name</th><th>Type</th><th>Quantity</th><th>Unit</th><th>Region</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Type</th><th>Quantity</th><th>Unit</th></tr></thead>
                     <tbody>
                         <tr th:each="r : ${resources}">
                             <td th:text="${r.name}">—</td>
                             <td th:text="${r.type}">—</td>
                             <td th:text="${r.quantity}">0</td>
                             <td th:text="${r.unit}">—</td>
-                            <td th:text="${r.region}">—</td>
                         </tr>
                     </tbody>
                 </table>

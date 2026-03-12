@@ -42,7 +42,7 @@
                     <thead><tr><th>Name</th><th>Description</th><th>Status</th></tr></thead>
                     <tbody>
                         <tr th:each="p : ${projects}">
-                            <td th:text="${p.name}">—</td>
+                            <td th:text="${p.title}">—</td>
                             <td th:text="${p.description}">—</td>
                             <td><span class="badge badge-active" th:text="${p.status}">—</span></td>
                         </tr>

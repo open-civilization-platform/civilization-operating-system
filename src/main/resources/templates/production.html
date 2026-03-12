@@ -29,7 +29,7 @@
                         <tr th:each="f : ${facilities}">
                             <td th:text="${f.name}">—</td>
                             <td th:text="${f.type}">—</td>
-                            <td th:text="${f.capacity}">0</td>
+                            <td th:text="${f.efficiency}">0</td>
                             <td th:text="${f.currentOutput}">0</td>
                             <td><span class="badge" th:classappend="${f.status == 'ACTIVE' ? 'badge-active' : 'badge-normal'}" th:text="${f.status}">—</span></td>
                         </tr>

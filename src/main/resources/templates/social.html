@@ -24,12 +24,12 @@
             <h2>Incidents</h2>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Type</th><th>Description</th><th>Region</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Type</th><th>Description</th><th>Location</th><th>Status</th></tr></thead>
                     <tbody>
                         <tr th:each="i : ${incidents}">
                             <td th:text="${i.type}">—</td>
                             <td th:text="${i.description}">—</td>
-                            <td th:text="${i.region}">—</td>
+                            <td th:text="${i.location}">—</td>
                             <td><span class="badge" th:classappend="${i.status == 'REPORTED' ? 'badge-critical' : 'badge-normal'}" th:text="${i.status}">—</span></td>
                         </tr>
                     </tbody>
@@ -40,11 +40,11 @@
             <h2>Cases</h2>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Title</th><th>Description</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Source Type</th><th>Resolution Plan</th><th>Status</th></tr></thead>
                     <tbody>
                         <tr th:each="c : ${cases}">
-                            <td th:text="${c.title}">—</td>
-                            <td th:text="${c.description}">—</td>
+                            <td th:text="${c.sourceIncident.type}">—</td>
+                            <td th:text="${c.resolutionPlan}">—</td>
                             <td><span class="badge badge-normal" th:text="${c.status}">—</span></td>
                         </tr>
                     </tbody>

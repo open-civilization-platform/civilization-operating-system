@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,14 +30,17 @@ public class BalanceService {
                 .collect(Collectors.groupingBy(n -> n.getCategory(), 
                         Collectors.summingDouble(n -> n.getQuantity())));
 
-        return supply.keySet().stream()
+        Set<String> allCategories = new HashSet<>(supply.keySet());
+        allCategories.addAll(demand.keySet());
+
+        return allCategories.stream()
                 .map(category -> {
                     double s = supply.getOrDefault(category, 0.0);
                     double d = demand.getOrDefault(category, 0.0);
                     Map<String, Object> result = new java.util.HashMap<>();
                     result.put("category", category);
-                    result.put("supply", s);
-                    result.put("demand", d);
+                    result.put("available", s);
+                    result.put("required", d);
                     result.put("percentageMet", d > 0 ? (s / d) * 100 : 100.0);
                     result.put("status", s >= d ? "STABLE" : "DEFICIT");
                     return result;

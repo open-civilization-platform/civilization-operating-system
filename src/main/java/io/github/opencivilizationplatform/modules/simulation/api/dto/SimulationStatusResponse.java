@@ -4,13 +4,13 @@ import java.util.List;
 
 public class SimulationStatusResponse {
     private String engine;
-    private int activeRules;
+    private int activeRulesCount;
     private String lastDecision;
     private List<String> monitoredCategories;
 
-    public SimulationStatusResponse(String engine, int activeRules, String lastDecision, List<String> monitoredCategories) {
+    public SimulationStatusResponse(String engine, int activeRulesCount, String lastDecision, List<String> monitoredCategories) {
         this.engine = engine;
-        this.activeRules = activeRules;
+        this.activeRulesCount = activeRulesCount;
         this.lastDecision = lastDecision;
         this.monitoredCategories = monitoredCategories;
     }
@@ -18,8 +18,8 @@ public class SimulationStatusResponse {
     public String getEngine() { return engine; }
     public void setEngine(String engine) { this.engine = engine; }
 
-    public int getActiveRules() { return activeRules; }
-    public void setActiveRules(int activeRules) { this.activeRules = activeRules; }
+    public int getActiveRulesCount() { return activeRulesCount; }
+    public void setActiveRulesCount(int activeRulesCount) { this.activeRulesCount = activeRulesCount; }
 
     public String getLastDecision() { return lastDecision; }
     public void setLastDecision(String lastDecision) { this.lastDecision = lastDecision; }

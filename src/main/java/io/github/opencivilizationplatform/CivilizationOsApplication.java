@@ -1,10 +1,10 @@
-package io.github.opencivilizationplatform.web;
+package io.github.opencivilizationplatform;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(scanBasePackages = {"io.github.opencivilizationplatform"})
+@SpringBootApplication
 @EnableScheduling
 public class CivilizationOsApplication {
 

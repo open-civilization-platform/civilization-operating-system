@@ -300,7 +300,7 @@ public class SeedDataConfig {
         housingSEA.setStatus("UNMET");
 
         Need nutritionSSA = new Need();
-        nutritionSSA.setCategory("NUTRITION");
+        nutritionSSA.setCategory("FOOD");
         nutritionSSA.setRegion("Sub-Saharan Africa");
         nutritionSSA.setDescription("Daily caloric target deficit for child population.");
         nutritionSSA.setQuantity(2.5);
@@ -352,7 +352,7 @@ public class SeedDataConfig {
         Rule caloricSecurity = new Rule();
         caloricSecurity.setTitle("Universal Caloric Security");
         caloricSecurity.setDescription("Strategic reserves must maintain a 6-month buffer of essential nutrients before export is authorized.");
-        caloricSecurity.setLogicCode("{\"type\": \"RESERVE_CHECK\", \"metric\": \"NUTRITION\", \"min_buffer_months\": 6}");
+        caloricSecurity.setLogicCode("{\"type\": \"RESERVE_CHECK\", \"metric\": \"FOOD\", \"min_buffer_months\": 6}");
         caloricSecurity.setStatus("ACTIVE");
         caloricSecurity.setValidationStatus("SCIENTIFICALLY_VALIDATED");
         caloricSecurity.setValidatedBy("Energy & Nutrition Council");

@@ -1,0 +1,53 @@
+package io.github.opencivilizationplatform.modules.logistics.application;
+
+import io.github.opencivilizationplatform.modules.logistics.domain.Shipment;
+import io.github.opencivilizationplatform.modules.logistics.infrastructure.ShipmentRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class ShipmentServiceTest {
+
+    @Mock
+    private ShipmentRepository shipmentRepository;
+
+    @InjectMocks
+    private ShipmentService shipmentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testGetAllShipments() {
+        Shipment s1 = new Shipment();
+        Shipment s2 = new Shipment();
+        when(shipmentRepository.findAll()).thenReturn(Arrays.asList(s1, s2));
+
+        List<Shipment> result = shipmentService.getAllShipments();
+
+        assertEquals(2, result.size());
+        verify(shipmentRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testSaveShipment() {
+        Shipment s = new Shipment();
+        s.setCargo("Medical Supplies");
+        when(shipmentRepository.save(any(Shipment.class))).thenReturn(s);
+
+        Shipment saved = shipmentService.saveShipment(s);
+
+        assertNotNull(saved);
+        assertEquals("Medical Supplies", saved.getCargo());
+    }
+}

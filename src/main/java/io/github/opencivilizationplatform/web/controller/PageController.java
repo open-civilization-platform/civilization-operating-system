@@ -69,6 +69,7 @@ public class PageController {
     public String dashboard(Model model) {
         model.addAttribute("balance", balanceService.getBalanceReport());
         model.addAttribute("simulationStatus", cortexService.getStatus());
+        model.addAttribute("resources", resourceService.getAllResources());
         return render(model, "dashboard", "Dashboard", "dashboard");
     }
 

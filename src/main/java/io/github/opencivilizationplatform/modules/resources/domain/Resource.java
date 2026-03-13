@@ -45,4 +45,12 @@ public class Resource {
     public void setUnit(String unit) { this.unit = unit; }
     public Point getLocation() { return location; }
     public void setLocation(Point location) { this.location = location; }
+
+    public Double getLatitude() {
+        return location != null ? location.getY() : null;
+    }
+
+    public Double getLongitude() {
+        return location != null ? location.getX() : null;
+    }
 }

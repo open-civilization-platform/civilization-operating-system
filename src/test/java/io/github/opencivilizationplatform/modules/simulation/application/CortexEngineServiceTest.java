@@ -1,0 +1,92 @@
+package io.github.opencivilizationplatform.modules.simulation.application;
+
+import tools.jackson.databind.ObjectMapper;
+import io.github.opencivilizationplatform.core.event.BiosphereCriticalEvent;
+import io.github.opencivilizationplatform.modules.monitoring.domain.BiosphereMetric;
+import io.github.opencivilizationplatform.modules.participation.application.RuleService;
+import io.github.opencivilizationplatform.modules.participation.domain.Rule;
+import io.github.opencivilizationplatform.modules.simulation.api.dto.SimulationStatusResponse;
+import io.github.opencivilizationplatform.modules.strategy.application.BalanceService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class CortexEngineServiceTest {
+
+    @Mock
+    private RuleService ruleService;
+
+    @Mock
+    private BalanceService balanceService;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @InjectMocks
+    private CortexEngineService cortexEngineService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testRunSimulationCycleNoRules() {
+        when(ruleService.getValidatedRules()).thenReturn(new ArrayList<>());
+        
+        cortexEngineService.runSimulationCycle();
+        
+        SimulationStatusResponse status = cortexEngineService.getStatus();
+        assertEquals(0, status.getActiveRulesCount());
+        verify(balanceService, never()).getBalanceReport();
+    }
+
+    @Test
+    void testRunSimulationCycleWithReserveCheck() throws Exception {
+        Rule rule = new Rule();
+        rule.setId(1L);
+        rule.setTitle("Water Scarcity Rule");
+        rule.setLogicCode("{\"type\": \"RESERVE_CHECK\", \"metric\": \"WATER\"}");
+        
+        List<Rule> rules = List.of(rule);
+        when(ruleService.getValidatedRules()).thenReturn(rules);
+        
+        Map<String, Object> balanceItem = new HashMap<>();
+        balanceItem.put("category", "WATER");
+        balanceItem.put("percentageMet", 75.0);
+        
+        List<Map<String, Object>> balance = List.of(balanceItem);
+        when(balanceService.getBalanceReport()).thenReturn(balance);
+        
+        cortexEngineService.runSimulationCycle();
+        
+        SimulationStatusResponse status = cortexEngineService.getStatus();
+        assertEquals(1, status.getActiveRulesCount());
+        assertTrue(status.getLastDecision().contains("WATER deficiency detected (75.0%)"));
+    }
+
+    @Test
+    void testOnBiosphereCritical() {
+        BiosphereMetric metric = new BiosphereMetric();
+        metric.setName("CO2_LEVEL");
+        metric.setValue(450.5);
+        
+        BiosphereCriticalEvent event = new BiosphereCriticalEvent(this, metric);
+        
+        cortexEngineService.onBiosphereCritical(event);
+        
+        SimulationStatusResponse status = cortexEngineService.getStatus();
+        assertTrue(status.getLastDecision().contains("AUTO-REACTION: Biosphere Redline! Target: CO2_LEVEL"));
+    }
+}

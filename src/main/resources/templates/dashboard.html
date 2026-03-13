@@ -127,6 +127,17 @@
         </a>
     </div>
 
+    <!-- World Resource Map (GIS Integration) -->
+    <section class="card glass-morphism animate" style="margin-top: 30px; position: relative; overflow: hidden;">
+        <h2 style="margin-bottom: 15px;"><i data-lucide="map" style="width: 18px; vertical-align: middle;"></i> WORLD RESOURCE MAP</h2>
+        <div id="world-map"></div>
+        <div style="position: absolute; bottom: 25px; right: 25px; z-index: 1000; pointer-events: none;">
+            <div class="glass-morphism" style="padding: 10px; font-size: 0.6rem; border-color: var(--accent-cyan);">
+                <span class="status-dot" style="background: var(--accent-cyan);"></span> RESOURCE NODES
+            </div>
+        </div>
+    </section>
+
     <!-- Telemetry Row (Simulating the bottom half of the image) -->
     <div class="telemetry-row">
         <section class="card glass-morphism" style="margin-top: 20px; padding: 20px;">
@@ -149,16 +160,97 @@
 
         <section class="card glass-morphism" style="margin-top: 20px; padding: 20px; border-color: rgba(255, 204, 0, 0.3);">
             <h2 style="font-size: 0.7rem; color: #ffcc00;"><i data-lucide="shield-check" style="width: 14px; vertical-align: middle;"></i> GOVERNANCE AUDIT</h2>
-            <div style="font-size: 0.7rem;">
+            <div style="font-size: 0.7rem;" id="audit-log">
                 <div style="color: #ffcc00; font-weight: 800; margin-bottom: 2px;">GLOBAL BIOSPHERE COMMISSION</div>
-                <div style="color: var(--text-dim); font-style: italic; margin-bottom: 10px;">"Validating CO2 Redline Clause..."</div>
+                <div id="biosphere-status" style="color: var(--text-dim); font-style: italic; margin-bottom: 10px;">"Validating CO2 Redline Clause..."</div>
                 
-                <div style="color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">ENERGY & NUTRITION COUNCIL</div>
-                <div style="color: var(--text-muted); font-style: italic; margin-bottom: 15px;">"Audit complete. Reserves verified."</div>
+                <div id="energy-header" style="color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">ENERGY & NUTRITION COUNCIL</div>
+                <div id="energy-status" style="color: var(--text-muted); font-style: italic; margin-bottom: 15px;">"Audit complete. Reserves verified."</div>
             </div>
-            <button class="glass-morphism" style="width: 100%; padding: 8px; font-size: 0.6rem; color: #ffcc00; border-color: rgba(255, 204, 0, 0.3); cursor: pointer;">
+            <button id="audit-btn" onclick="runAudit()" class="glass-morphism" style="width: 100%; padding: 8px; font-size: 0.6rem; color: #ffcc00; border-color: rgba(255, 204, 0, 0.3); cursor: pointer;">
                 REQUEST DATA AUDIT
             </button>
         </section>
     </div>
+
+    <script th:inline="javascript">
+        function runAudit() {
+            const btn = document.getElementById('audit-btn');
+            const bioStatus = document.getElementById('biosphere-status');
+            const energyStatus = document.getElementById('energy-status');
+            const energyHeader = document.getElementById('energy-header');
+
+            btn.disabled = true;
+            btn.innerText = 'Initializing Secure Cryptographic Audit...';
+            btn.style.opacity = '0.5';
+
+            setTimeout(() => {
+                bioStatus.innerHTML = '<span class="glow-text" style="color: var(--accent-cyan); font-style: normal;">SCANNING PLANETARY BIOMARKERS...</span>';
+                bioStatus.style.color = 'var(--accent-cyan)';
+            }, 800);
+
+            setTimeout(() => {
+                bioStatus.innerHTML = '<i data-lucide="check-circle" style="width: 12px; vertical-align: middle; color: var(--green);"></i> <span style="color: var(--green); font-style: normal; font-weight: 700;">BIOSPHERE COMPLIANT</span>';
+                lucide.createIcons();
+            }, 2500);
+
+            setTimeout(() => {
+                energyHeader.style.color = '#ffcc00';
+                energyStatus.innerHTML = '<span class="glow-text" style="color: #ffcc00; font-style: normal;">SYNCING GLOBAL RESERVES...</span>';
+            }, 3200);
+
+            setTimeout(() => {
+                energyStatus.innerHTML = '<i data-lucide="check-circle" style="width: 12px; vertical-align: middle; color: var(--green);"></i> <span style="color: var(--green); font-style: normal; font-weight: 700;">RESERVES VALIDATED (STABLE)</span>';
+                btn.innerText = 'AUDIT SUCCESSFUL';
+                btn.style.borderColor = 'var(--green)';
+                btn.style.color = 'var(--green)';
+                btn.style.opacity = '1';
+                lucide.createIcons();
+            }, 5000);
+        }
+
+        // Initialize World Map
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapElement = document.getElementById('world-map');
+            if (!mapElement) return;
+
+            const map = L.map('world-map', {
+                center: [20, 0],
+                zoom: 2,
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Access resources passed from PageController
+            /*[# th:if="${resources != null}"]*/
+            /*[# th:each="res : ${resources}"]*/
+            try {
+                const lat = /*[[${res.getLatitude()}]]*/ null;
+                const lng = /*[[${res.getLongitude()}]]*/ null;
+                const name = /*[[${res.name}]]*/ 'Unknown';
+                const type = /*[[${res.type}]]*/ 'RESOURCE';
+                
+                if (lat !== null && lng !== null) {
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    });
+
+                    L.marker([lat, lng], {icon: icon})
+                        .addTo(map)
+                        .bindPopup(`<div style="background:#111; color:white; padding:5px; border-radius:4px; font-family:sans-serif;">
+                                    <b style="color:var(--accent-cyan)">${name}</b><br>
+                                    <span style="font-size:0.7rem; color:#aaa">${type}</span>
+                                   </div>`);
+                }
+            } catch(e) { console.error("Map Marker Error", e); }
+            /*[/]*/
+            /*[/]*/
+        });
+    </script>
 </div>

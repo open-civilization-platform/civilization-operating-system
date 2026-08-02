@@ -4,7 +4,7 @@ import { BarChart3, Globe, Network, Trees, Warehouse, Handshake, ArrowLeftRight,
 import Dashboard from './pages/Dashboard'
 
 const CivilizationDetail = lazy(() => import('./pages/CivilizationDetail'))
-const VoxtexMesh = lazy(() => import('./pages/VoxtexMesh'))
+const NexusMesh = lazy(() => import('./pages/NexusMesh'))
 const ResourceMap = lazy(() => import('./pages/ResourceMap'))
 const Trade = lazy(() => import('./pages/Trade'))
 const Constitution = lazy(() => import('./pages/Constitution'))
@@ -27,7 +27,7 @@ const PageLoader = () => (
 const navItems = [
   { path: '/', label: 'Dashboard', icon: BarChart3 },
   { path: '/civilizations', label: 'Civilizations', icon: Globe },
-  { path: '/voxtex', label: 'Voxtex Mesh', icon: Network },
+  { path: '/nexus', label: 'Nexus Mesh', icon: Network },
   { path: '/resources', label: 'Resources', icon: Trees },
   { path: '/production', label: 'Production', icon: Warehouse },
   { path: '/logistics', label: 'Logistics', icon: Handshake },
@@ -71,7 +71,8 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/civilizations" element={<Dashboard />} />
             <Route path="/civilization/:id" element={<CivilizationDetail />} />
-            <Route path="/voxtex" element={<VoxtexMesh />} />
+            <Route path="/nexus" element={<NexusMesh />} />
+            <Route path="/voxtex" element={<NexusMesh />} />
             <Route path="/resources" element={<ResourceMap />} />
             <Route path="/trade" element={<Trade />} />
             <Route path="/constitution" element={<Constitution />} />

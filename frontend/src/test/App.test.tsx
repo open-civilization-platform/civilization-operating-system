@@ -63,4 +63,45 @@ describe('App responsive navigation', () => {
     const dashboardLink = screen.getByText('Dashboard').closest('a')
     expect(dashboardLink).toHaveStyle({ minHeight: '44px' })
   })
+
+  it('exposes aria-expanded/aria-controls on the hamburger toggle', () => {
+    renderApp()
+    const toggle = screen.getByLabelText('Open navigation menu')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveAttribute('aria-controls', 'mobile-nav')
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('marks the backdrop as aria-hidden so it is not an unlabelled focus stop', () => {
+    renderApp()
+    fireEvent.click(screen.getByLabelText('Open navigation menu'))
+    const backdrop = document.querySelector('[aria-hidden="true"]')
+    expect(backdrop).toBeInTheDocument()
+  })
+
+  it('is inert (unfocusable/hidden from a11y tree) when off-screen on a mobile viewport', () => {
+    const originalMatchMedia = window.matchMedia
+    // Simulate a mobile viewport for this test only
+    window.matchMedia = (query: string) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList
+
+    renderApp()
+    const nav = screen.getByRole('navigation', { hidden: true })
+    expect(nav).toHaveAttribute('inert')
+
+    fireEvent.click(screen.getByLabelText('Open navigation menu'))
+    expect(nav).not.toHaveAttribute('inert')
+
+    window.matchMedia = originalMatchMedia
+  })
 })

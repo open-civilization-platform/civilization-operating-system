@@ -43,6 +43,21 @@ export default function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
 
+  // Track whether we're below the md breakpoint so we know when the drawer
+  // is actually off-screen (vs. always-visible on desktop) for a11y purposes
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(max-width: 767px)').matches
+      : false
+  )
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const mql = window.matchMedia('(max-width: 767px)')
+    const onChange = (e: MediaQueryListEvent) => setIsMobileViewport(e.matches)
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
   // Close the mobile drawer whenever the route changes (e.g. after tapping a nav link)
   useEffect(() => {
     setMobileNavOpen(false)
@@ -62,6 +77,10 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileNavOpen])
 
+  // True only when the drawer is actually off-screen (mobile viewport + closed).
+  // On desktop the nav is always visible, so it must never be inert/hidden there.
+  const navOffscreen = isMobileViewport && !mobileNavOpen
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Mobile top bar: shown < 768px, hosts the hamburger toggle */}
@@ -76,6 +95,8 @@ export default function App() {
         <button
           onClick={() => setMobileNavOpen(true)}
           aria-label="Open navigation menu"
+          aria-expanded={mobileNavOpen}
+          aria-controls="mobile-nav"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 44, height: 44, background: 'transparent', border: 'none',
@@ -93,12 +114,15 @@ export default function App() {
         <div
           className="md:hidden"
           onClick={() => setMobileNavOpen(false)}
+          aria-hidden="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }}
         />
       )}
 
       <nav
+        id="mobile-nav"
         className={`${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        inert={navOffscreen}
         style={{
           position: 'fixed', top: 0, left: 0, bottom: 0,
           width: 240, maxWidth: '85vw', background: '#1e293b', borderRight: '1px solid #334155',
@@ -168,4 +192,5 @@ export default function App() {
       </main>
     </div>
   )
+
 }

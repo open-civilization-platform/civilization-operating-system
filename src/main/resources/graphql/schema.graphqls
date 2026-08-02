@@ -60,7 +60,7 @@ type ResourceSummary {
 type CivilizationPage {
     content: [Civilization!]!
     totalPages: Int!
-    totalElements: Long!
+    totalElements: Int!
     size: Int!
     number: Int!
 }

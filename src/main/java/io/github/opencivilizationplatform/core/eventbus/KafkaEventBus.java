@@ -47,6 +47,7 @@ public class KafkaEventBus implements EventBus {
 
             kafkaTemplate.send(new ProducerRecord<>(topic, event.getEventId().toString(), json));
             log.debug("Published event to Kafka topic {}: {}", topic, event.getEventId());
+            notifyLocal(event);
         } catch (Exception e) {
             log.error("Failed to serialize event {}: {}", event.getType(), e.getMessage());
         }

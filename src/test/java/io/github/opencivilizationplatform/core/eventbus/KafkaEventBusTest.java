@@ -97,4 +97,15 @@ class KafkaEventBusTest {
 
         assertThat(captor.getValue().topic()).isEqualTo("civos.civilization.created");
     }
+
+    @Test
+    void shouldNotifyLocalSubscribersOnPublish() {
+        java.util.concurrent.atomic.AtomicBoolean notified = new java.util.concurrent.atomic.AtomicBoolean(false);
+        eventBus.subscribe(CivilizationCreatedEvent.class, e -> notified.set(true));
+
+        CivilizationCreatedEvent event = new CivilizationCreatedEvent("test", 1L, "Alpha", "Region1", CivilizationScale.LOCAL, "token");
+        eventBus.publish(event);
+
+        assertThat(notified.get()).isTrue();
+    }
 }

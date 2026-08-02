@@ -125,7 +125,7 @@ public class RedisCacheIntegrationTest {
 
         // 2. Mutate the cache directly: put a dummy list containing a specific dummy BalanceDTO
         BalanceDTO dummyDto = new BalanceDTO("dummy-category", 999.0, 999.0, "units", 100.0, "STABLE");
-        List<BalanceDTO> dummyList = List.of(dummyDto);
+        List<BalanceDTO> dummyList = new java.util.ArrayList<>(List.of(dummyDto));
         cache.put("report", dummyList);
 
         // 3. Invoke balanceService.getBalanceReport() a second time

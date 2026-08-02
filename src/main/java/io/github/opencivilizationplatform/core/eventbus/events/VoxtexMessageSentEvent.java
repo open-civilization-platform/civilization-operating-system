@@ -11,16 +11,13 @@ public class VoxtexMessageSentEvent extends BaseDomainEvent {
 
     public VoxtexMessageSentEvent(String source, Long messageId, Long sourceNodeId,
                                    Long targetNodeId, String messageType, String content) {
-        super(source);
+        super(source, "nexus", "message_sent");
         this.messageId = messageId;
         this.sourceNodeId = sourceNodeId;
         this.targetNodeId = targetNodeId;
         this.messageType = messageType;
         this.content = content;
     }
-
-    @Override
-    public String getType() { return "VOXTEX_MESSAGE_SENT"; }
 
     public Long getMessageId() { return messageId; }
     public Long getSourceNodeId() { return sourceNodeId; }

@@ -7,16 +7,18 @@ import io.github.opencivilizationplatform.modules.events.domain.GameEvent;
 import io.github.opencivilizationplatform.modules.events.infrastructure.GameEventRepository;
 import io.github.opencivilizationplatform.modules.trade.domain.TradeAgreement;
 import io.github.opencivilizationplatform.modules.trade.infrastructure.TradeRepository;
-import io.github.opencivilizationplatform.modules.voxtex.domain.VoxtexMessage;
-import io.github.opencivilizationplatform.modules.voxtex.domain.VoxtexMessageType;
-import io.github.opencivilizationplatform.modules.voxtex.domain.VoxtexNode;
-import io.github.opencivilizationplatform.modules.voxtex.infrastructure.VoxtexNodeRepository;
-import io.github.opencivilizationplatform.modules.voxtex.infrastructure.VoxtexMessageRepository;
+import io.github.opencivilizationplatform.modules.nexus.domain.NexusMessage;
+import io.github.opencivilizationplatform.modules.nexus.domain.NexusMessageType;
+import io.github.opencivilizationplatform.modules.nexus.domain.NexusNode;
+import io.github.opencivilizationplatform.modules.nexus.infrastructure.NexusNodeRepository;
+import io.github.opencivilizationplatform.modules.nexus.infrastructure.NexusMessageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -29,8 +31,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class CivilizationFlowIntegrationTest {
 
-    @Autowired
-    private TestRestTemplate rest;
+    @LocalServerPort
+    private int port;
+
+    private RestTemplate rest;
 
     @Autowired
     private JwtService jwtService;
@@ -39,10 +43,10 @@ class CivilizationFlowIntegrationTest {
     private CivilizationRepository civilizationRepository;
 
     @Autowired
-    private VoxtexNodeRepository voxtexNodeRepository;
+    private NexusNodeRepository nexusNodeRepository;
 
     @Autowired
-    private VoxtexMessageRepository voxtexMessageRepository;
+    private NexusMessageRepository nexusMessageRepository;
 
     @Autowired
     private GameEventRepository gameEventRepository;
@@ -55,9 +59,12 @@ class CivilizationFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        rest = new RestTemplate();
+        rest.setUriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:" + port));
+
         civilizationRepository.deleteAll();
-        voxtexNodeRepository.deleteAll();
-        voxtexMessageRepository.deleteAll();
+        nexusNodeRepository.deleteAll();
+        nexusMessageRepository.deleteAll();
         gameEventRepository.deleteAll();
         tradeRepository.deleteAll();
 
@@ -112,7 +119,7 @@ class CivilizationFlowIntegrationTest {
         assertEquals(HttpStatus.OK, byId.getStatusCode());
         assertEquals("TestCiv", byId.getBody().getName().substring(0, 7));
 
-        // 5. Create a voxtex node
+        // 5. Create a nexus node
         var nodeRequest = Map.of(
             "name", "Primary-Node",
             "type", "PRIMARY",
@@ -121,7 +128,7 @@ class CivilizationFlowIntegrationTest {
             "knowledgeBase", "Test knowledge base"
         );
         ResponseEntity<Map> node = rest.exchange(
-            "/api/v1/voxtex/nodes", HttpMethod.POST, jsonRequest(nodeRequest), Map.class
+            "/api/v1/nexus/nodes", HttpMethod.POST, jsonRequest(nodeRequest), Map.class
         );
         assertEquals(HttpStatus.OK, node.getStatusCode());
         assertNotNull(node.getBody().get("id"));
@@ -129,7 +136,7 @@ class CivilizationFlowIntegrationTest {
 
         // 6. Get nodes for civilization
         ResponseEntity<List> civNodes = rest.exchange(
-            "/api/v1/voxtex/nodes/civilization/" + civId, HttpMethod.GET, authRequest(), List.class
+            "/api/v1/nexus/nodes/civilization/" + civId, HttpMethod.GET, authRequest(), List.class
         );
         assertEquals(HttpStatus.OK, civNodes.getStatusCode());
         assertTrue(civNodes.getBody().size() >= 1);
@@ -143,11 +150,11 @@ class CivilizationFlowIntegrationTest {
             "knowledgeBase", "Secondary knowledge base"
         );
         ResponseEntity<Map> node2 = rest.exchange(
-            "/api/v1/voxtex/nodes", HttpMethod.POST, jsonRequest(node2Request), Map.class
+            "/api/v1/nexus/nodes", HttpMethod.POST, jsonRequest(node2Request), Map.class
         );
         String node2Id = node2.getBody().get("id").toString();
 
-        // 8. Send a voxtex message between nodes
+        // 8. Send a nexus message between nodes
         var msgRequest = Map.of(
             "sourceNodeId", Long.parseLong(nodeId),
             "targetNodeId", Long.parseLong(node2Id),
@@ -155,29 +162,29 @@ class CivilizationFlowIntegrationTest {
             "content", "Hello from integration test!"
         );
         ResponseEntity<Map> msg = rest.exchange(
-            "/api/v1/voxtex/messages", HttpMethod.POST, jsonRequest(msgRequest), Map.class
+            "/api/v1/nexus/messages", HttpMethod.POST, jsonRequest(msgRequest), Map.class
         );
         assertEquals(HttpStatus.OK, msg.getStatusCode());
         assertNotNull(msg.getBody().get("id"));
 
         // 9. Get pending messages for target node
         ResponseEntity<List> pending = rest.exchange(
-            "/api/v1/voxtex/messages/pending/" + node2Id, HttpMethod.GET, authRequest(), List.class
+            "/api/v1/nexus/messages/pending/" + node2Id, HttpMethod.GET, authRequest(), List.class
         );
         assertEquals(HttpStatus.OK, pending.getStatusCode());
         assertTrue(pending.getBody().size() >= 1);
 
         // 10. Get conversation between nodes
         ResponseEntity<List> conversation = rest.exchange(
-            "/api/v1/voxtex/messages/conversation/" + nodeId + "/" + node2Id,
+            "/api/v1/nexus/messages/conversation/" + nodeId + "/" + node2Id,
             HttpMethod.GET, authRequest(), List.class
         );
         assertEquals(HttpStatus.OK, conversation.getStatusCode());
         assertTrue(conversation.getBody().size() >= 1);
 
-        // 11. Get voxtex network status
+        // 11. Get nexus network status
         ResponseEntity<Map> status = rest.exchange(
-            "/api/v1/voxtex/status", HttpMethod.GET, authRequest(), Map.class
+            "/api/v1/nexus/status", HttpMethod.GET, authRequest(), Map.class
         );
         assertEquals(HttpStatus.OK, status.getStatusCode());
         assertNotNull(status.getBody().get("networkStatus"));
@@ -198,7 +205,7 @@ class CivilizationFlowIntegrationTest {
     void testPublicEndpointsAreAccessible() {
         // Public GET endpoints should work without auth
         ResponseEntity<List> regions = rest.exchange(
-            "/api/v1/voxtex/nodes", HttpMethod.GET, null, List.class
+            "/api/v1/nexus/nodes", HttpMethod.GET, null, List.class
         );
         assertEquals(HttpStatus.OK, regions.getStatusCode());
 
@@ -276,7 +283,7 @@ class CivilizationFlowIntegrationTest {
         var entity = new HttpEntity<>(headers);
 
         ResponseEntity<Map> response = rest.exchange(
-            "/api/v1/voxtex/status", HttpMethod.GET, entity, Map.class
+            "/api/v1/nexus/status", HttpMethod.GET, entity, Map.class
         );
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }

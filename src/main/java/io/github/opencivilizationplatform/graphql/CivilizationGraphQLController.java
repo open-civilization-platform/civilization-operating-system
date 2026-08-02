@@ -5,7 +5,8 @@ import io.github.opencivilizationplatform.modules.civilization.application.Civil
 import io.github.opencivilizationplatform.modules.civilization.domain.Civilization;
 import io.github.opencivilizationplatform.modules.region.application.ResourceRegionService;
 import io.github.opencivilizationplatform.modules.region.domain.ResourceRegion;
-import io.github.opencivilizationplatform.modules.voxtex.application.VoxtexMeshService;
+import io.github.opencivilizationplatform.modules.nexus.application.NexusMeshService;
+import io.github.opencivilizationplatform.modules.nexus.domain.NexusNodeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -23,14 +24,14 @@ public class CivilizationGraphQLController {
 
     private final CivilizationService civilizationService;
     private final ResourceRegionService regionService;
-    private final VoxtexMeshService voxtexService;
+    private final NexusMeshService nexusService;
 
     public CivilizationGraphQLController(CivilizationService civilizationService,
                                           ResourceRegionService regionService,
-                                          VoxtexMeshService voxtexService) {
+                                          NexusMeshService nexusService) {
         this.civilizationService = civilizationService;
         this.regionService = regionService;
-        this.voxtexService = voxtexService;
+        this.nexusService = nexusService;
     }
 
     @QueryMapping
@@ -64,8 +65,8 @@ public class CivilizationGraphQLController {
         Civilization civ = civilizationService.createCivilization(name,
             scale != null ? scale : CivilizationScale.LOCAL, reg.getName(), "graphql-user");
         regionService.claimRegion(regionId, civ.getId());
-        voxtexService.registerNode(civ.getName() + "-Primary",
-            io.github.opencivilizationplatform.modules.voxtex.domain.VoxtexNodeType.PRIMARY,
+        nexusService.registerNode(civ.getName() + "-Primary",
+            NexusNodeType.PRIMARY,
             reg.getName(), civ.getId(), "Primary node for " + civ.getName());
         return civ;
     }
@@ -83,7 +84,7 @@ public class CivilizationGraphQLController {
 
     @SchemaMapping(typeName = "Civilization", field = "voxtexNodes")
     public List<?> voxtexNodes(Civilization civ) {
-        return voxtexService.getNodesForCivilization(civ.getId());
+        return nexusService.getNodesForCivilization(civ.getId());
     }
 
     @SchemaMapping(typeName = "Civilization", field = "homeRegion")

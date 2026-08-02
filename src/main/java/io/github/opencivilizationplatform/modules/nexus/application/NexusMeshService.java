@@ -2,8 +2,6 @@ package io.github.opencivilizationplatform.modules.nexus.application;
 
 import io.github.opencivilizationplatform.core.eventbus.EventBus;
 import io.github.opencivilizationplatform.core.eventbus.events.VoxtexMessageSentEvent;
-import io.github.opencivilizationplatform.modules.voxtex.domain.*;
-import io.github.opencivilizationplatform.modules.voxtex.infrastructure.*;
 import io.github.opencivilizationplatform.modules.nexus.domain.*;
 import io.github.opencivilizationplatform.modules.nexus.dto.NexusMessageSyncDTO;
 import io.github.opencivilizationplatform.modules.nexus.infrastructure.*;

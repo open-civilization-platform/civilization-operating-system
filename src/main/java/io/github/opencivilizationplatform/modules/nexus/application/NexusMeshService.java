@@ -303,14 +303,16 @@ public class NexusMeshService {
 
     private void connectToNeighbors(NexusNode node) {
         // Connect to other nodes from the same civilization
-        var sameCiv = nodeRepository.findByCivilizationId(
-            node.getCivilization().getId());
-        for (var neighbor : sameCiv) {
-            if (!neighbor.getId().equals(node.getId())) {
-                NexusConnection conn = new NexusConnection();
-                conn.setNodeA(node);
-                conn.setNodeB(neighbor);
-                connectionRepository.save(conn);
+        if (node.getCivilization() != null && node.getCivilization().getId() != null) {
+            var sameCiv = nodeRepository.findByCivilizationId(
+                node.getCivilization().getId());
+            for (var neighbor : sameCiv) {
+                if (neighbor.getId() != null && !neighbor.getId().equals(node.getId())) {
+                    NexusConnection conn = new NexusConnection();
+                    conn.setNodeA(node);
+                    conn.setNodeB(neighbor);
+                    connectionRepository.save(conn);
+                }
             }
         }
 
@@ -319,7 +321,9 @@ public class NexusMeshService {
         int connectionsToMake = Math.min(3, allNodes.size() / 2);
         for (int i = 0; i < connectionsToMake; i++) {
             var target = allNodes.get((int)(Math.random() * allNodes.size()));
-            if (!target.getId().equals(node.getId()) &&
+            if (target.getId() != null && !target.getId().equals(node.getId()) &&
+                target.getCivilization() != null && target.getCivilization().getId() != null &&
+                node.getCivilization() != null && node.getCivilization().getId() != null &&
                 !target.getCivilization().getId().equals(node.getCivilization().getId())) {
                 NexusConnection conn = new NexusConnection();
                 conn.setNodeA(node);

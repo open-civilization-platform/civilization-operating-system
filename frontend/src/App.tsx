@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import React, { Suspense, lazy, useState, useEffect } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { BarChart3, Globe, Network, Trees, Warehouse, Handshake, ArrowLeftRight, ScrollText, Heart, Beaker, Gamepad2, Trophy, Menu, X } from 'lucide-react'
 import Dashboard from './pages/Dashboard'

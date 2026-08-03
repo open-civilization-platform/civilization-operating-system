@@ -87,6 +87,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/civilizations" element={<Dashboard />} />
             <Route path="/civilization/:id" element={<CivilizationDetail />} />
+            <Route path="/civilizations/:id" element={<CivilizationDetail />} />
             <Route path="/nexus" element={<NexusMesh />} />
             <Route path="/voxtex" element={<Navigate to="/nexus" replace />} />
             <Route path="/resources" element={<ResourceMap />} />

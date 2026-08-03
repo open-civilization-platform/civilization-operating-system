@@ -20,6 +20,38 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes pulse-ring {
+  0% {
+    r: 20px;
+    stroke-opacity: 0.9;
+    stroke-width: 2px;
+  }
+  100% {
+    r: 36px;
+    stroke-opacity: 0;
+    stroke-width: 0.5px;
+  }
+}
+
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.mesh-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.mesh-dash-animated {
+  stroke-dasharray: 6 6;
+  animation: dash-flow 1.5s linear infinite;
+}
+
+
 .dashboard-grid {
   display: grid;
   /* min(340px, 100%) lets cards shrink below 340px on narrow viewports

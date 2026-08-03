@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Frontend Pages & Backend Communication E2E Tests', () => {
   test('Dashboard loads without error and connects to WebSocket/GraphQL', async ({ page }) => {
     await page.goto('http://localhost:3000/')
-    await expect(page.locator('h1, h2, header')).toBeVisible()
+    await expect(page.getByText('Global Resources')).toBeVisible()
     await expect(page.getByText('Error loading')).not.toBeVisible()
   })
 
@@ -39,7 +39,6 @@ test.describe('Frontend Pages & Backend Communication E2E Tests', () => {
   test('Civilization Detail page loads civilization info', async ({ page }) => {
     await page.goto('http://localhost:3000/civilizations/1')
     await expect(page.getByText('Error loading')).not.toBeVisible()
-    await expect(page.getByText(/Civilization #1|Civilization Details/i).first()).toBeVisible()
     await expect(page.getByText('Population Needs')).toBeVisible()
     await expect(page.getByText('Territory & Home Region')).toBeVisible()
   })

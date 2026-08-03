@@ -51,11 +51,32 @@ export default function Constitution() {
 
   if (error && activeTab === 'rules' && rules.length === 0) {
     return (
-      <Layout icon={<ScrollText size={24} color="#f59e0b" />} title="Governance" subtitle="Constitution, rules, and committees">
+      <Layout
+        icon={<ScrollText size={24} color="#f59e0b" />}
+        title="Governance"
+        subtitle="Constitution, rules, and committees"
+        actions={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem',
+              borderRadius: '0.5rem', border: 'none', background: '#f59e0b', color: '#0f172a',
+              cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+            }}
+          >
+            <Plus size={16} /> Propose Rule
+          </button>
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '1rem', color: '#ef4444' }}>
           <AlertCircle size={36} />
           <span>Failed to load constitutional rules: {error}</span>
         </div>
+        <RuleProposalModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={fetchRules}
+        />
       </Layout>
     )
   }

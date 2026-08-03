@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react'
-import { useParams as useReactParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import {
   Globe, Users, Shield, MapPin, Calendar, Activity,
   TrendingUp, ArrowLeft, Loader2, Clock, GitBranch
@@ -34,8 +33,7 @@ const MOCK_TIMELINE_EVENTS = [
 ]
 
 export default function CivilizationDetail() {
-  const params = useReactParams()
-  const id = params.id || '1'
+  const { id = '1' } = useParams()
   const [civData, setCivData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

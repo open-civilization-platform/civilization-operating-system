@@ -50,15 +50,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Mobile top bar: shown < 768px, hosts the hamburger toggle */}
-      <header
-        className="md:hidden"
-        style={{
-          position: 'fixed', top: 0, left: 0, right: 0, height: 56, zIndex: 40,
-          display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 0.75rem',
-          background: '#1e293b', borderBottom: '1px solid #334155'
-        }}
-      >
+      <header className="mobile-header">
         <button
           onClick={() => setMobileNavOpen(true)}
           aria-label="Open navigation menu"

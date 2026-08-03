@@ -118,6 +118,26 @@ html, body {
   }
 }
 
+.mobile-header {
+  display: none !important;
+}
+@media (max-width: 767px) {
+  .mobile-header {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 40;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+  }
+}
+
 @media (max-width: 480px) {
   .dashboard-grid {
     padding: 0.5rem;

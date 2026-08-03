@@ -135,7 +135,7 @@ export default function RuleProposalModal({ isOpen, onClose, onSuccess }: RulePr
         zIndex: 50,
         display: 'flex',
         alignItems: 'center',
-        justify: 'center',
+        justifyContent: 'center',
         padding: '1rem',
         background: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(4px)'

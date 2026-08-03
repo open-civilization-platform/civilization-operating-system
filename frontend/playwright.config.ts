@@ -8,7 +8,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npx vite --port 3000',
+    command: 'npx vite preview --port 3000',
     port: 3000,
     reuseExistingServer: true,
   },

@@ -102,3 +102,19 @@ class CivOSClient:
             "category": category,
         }
         return self._request("POST", "/api/v1/rules", json_data=payload)
+
+    def send_nexus_message(
+        self,
+        target_node_id: str,
+        content: str,
+        sender_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Send a message across the Nexus mesh network."""
+        payload = {
+            "target_node_id": target_node_id,
+            "content": content,
+        }
+        if sender_id:
+            payload["sender_id"] = sender_id
+        return self._request("POST", "/api/v1/nexus/messages", json_data=payload)
+

@@ -55,6 +55,7 @@ public class SimulationEngineService {
     private final List<String> monitoredCategories = new ArrayList<>();
     private final LinkedList<String> decisionHistory = new LinkedList<>();
 
+    @org.springframework.beans.factory.annotation.Autowired
     public SimulationEngineService(RuleService ruleService,
                                    BalanceService balanceService,
                                    ObjectMapper objectMapper,

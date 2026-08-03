@@ -29,13 +29,6 @@ html, body {
   padding: 1rem;
 }
 
-@media (max-width: 480px) {
-  .dashboard-grid {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-}
-
 .stat-card {
   background: var(--bg-card);
   border: 1px solid #334155;
@@ -59,4 +52,43 @@ html, body {
   height: 100%;
   border-radius: 4px;
   transition: width 0.5s ease;
+}
+
+/* Mobile responsive media queries */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .sidebar-drawer {
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+
+  .mobile-close-btn {
+    display: flex !important;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
 }

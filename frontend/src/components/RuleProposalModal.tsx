@@ -116,7 +116,7 @@ export default function RuleProposalModal({ isOpen, onClose, onSuccess }: RulePr
         if (onSuccess) onSuccess()
         onClose()
       }, 1200)
-    } catch (err: any) {
+    } catch {
       setSuccessMsg('Constitutional rule proposed (local confirmation)')
       setTimeout(() => {
         if (onSuccess) onSuccess()

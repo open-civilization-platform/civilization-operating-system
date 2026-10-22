@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface ResourceChartProps {
-  data: Record<string, any>[]
+  data: Record<string, string | number | null | undefined>[]
   dataKeys: { key: string; color: string }[]
   xKey?: string
 }

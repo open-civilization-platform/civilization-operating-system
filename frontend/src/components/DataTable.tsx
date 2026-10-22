@@ -12,7 +12,7 @@ interface DataTableProps<T> {
   emptyMessage?: string
 }
 
-export default function DataTable<T extends Record<string, any>>({
+export default function DataTable<T extends Record<string, unknown>>({
   columns, data, loading, emptyMessage = 'No data'
 }: DataTableProps<T>) {
   if (loading) {
@@ -40,10 +40,10 @@ export default function DataTable<T extends Record<string, any>>({
         </thead>
         <tbody>
           {data.map((item, i) => (
-            <tr key={item.id || i} style={{ borderBottom: '1px solid #1e293b' }}>
+            <tr key={typeof item.id === 'string' || typeof item.id === 'number' ? item.id : i} style={{ borderBottom: '1px solid #1e293b' }}>
               {columns.map(col => (
                 <td key={col.key} style={{ padding: '0.6rem 0.5rem' }}>
-                  {col.render ? col.render(item) : item[col.key]}
+                  {col.render ? col.render(item) : item[col.key] as React.ReactNode}
                 </td>
               ))}
             </tr>

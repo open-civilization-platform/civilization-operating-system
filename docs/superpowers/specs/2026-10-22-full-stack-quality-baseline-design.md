@@ -21,6 +21,8 @@ Add a frontend job to `.github/workflows/ci.yml`. Run it for pull requests targe
 3. `npm test` (Vitest's one-shot script).
 4. `npm run build` (TypeScript check and Vite production build).
 
+The first lint run exposed pre-existing frontend debt: 61 errors, including 49 explicit `any` uses. Remove the unused imports/state and hook dependency issues. Keep the remaining explicit `any` findings visible as warnings with a maximum-warning budget equal to the current baseline (37) so new lint debt fails CI while API response types are added incrementally.
+
 Keep the frontend job independent of the backend Maven job so GitHub can run both concurrently. Do not add a browser installation or run Playwright E2E tests in this first cycle; those require a separately sized browser-runner decision.
 
 ### Backend CI and Image Publishing
@@ -59,5 +61,6 @@ Keep setup commands consistent with the existing Makefile and Docker Compose con
 ## Risks and Mitigations
 
 - Frontend checks may expose existing lint, test, or TypeScript failures. Treat these as actionable CI findings and fix only failures needed to establish the stated gate.
+- Existing explicit `any` warnings remain visible under a fixed budget and should be removed as frontend API response types are introduced.
 - NPM package installation adds time to CI. Use the lockfile and the setup-node npm cache keyed by that lockfile if supported by the repository's existing Actions patterns.
 - The service scaffolds can be mistaken for deployed production services. State which workflows and Compose services actually build and run, and avoid implying the scaffold has production ownership.

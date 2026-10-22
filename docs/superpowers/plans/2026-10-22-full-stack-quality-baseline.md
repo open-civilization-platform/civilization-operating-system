@@ -26,6 +26,7 @@
 - The current container builder uses Node 20 while the CI job will use Node 24: flag this toolchain difference for a follow-up rather than silently changing the Docker build stage outside the approved spec.
 - The `services/` Maven reactor is not built by the root workflow: README text must distinguish the root application and worker from service scaffolding.
 - The Makefile's `docker-up` and `docker-up-all` start different Compose service sets: document the actual commands and resulting services accurately.
+- The initial frontend lint run fails on pre-existing warnings/errors: clear unused imports/state and hook dependency errors, then cap the remaining explicit `any` warnings at the measured baseline so new debt fails CI.
 
 ---
 

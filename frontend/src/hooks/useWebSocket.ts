@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-type MessageHandler = (data: any) => void
+type MessageHandler = (data: unknown) => void
 
 export function useWebSocket(urlOrToken: string = '/ws/nexus', token?: string) {
   const ws = useRef<WebSocket | null>(null)
@@ -11,7 +11,7 @@ export function useWebSocket(urlOrToken: string = '/ws/nexus', token?: string) {
   const path = urlOrToken.startsWith('/') ? urlOrToken : '/ws/nexus'
   const authToken = urlOrToken.startsWith('/') ? token : urlOrToken
 
-  function connect() {
+  const connect = useCallback(() => {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     const url = `${protocol}//${location.host}${path}${authToken ? `?token=${authToken}` : ''}`
 
@@ -34,7 +34,7 @@ export function useWebSocket(urlOrToken: string = '/ws/nexus', token?: string) {
         // ignore parse errors
       }
     }
-  }
+  }, [authToken, path])
 
   function subscribe(type: string, handler: MessageHandler) {
     const existing = handlers.current.get(type) || []
@@ -46,7 +46,7 @@ export function useWebSocket(urlOrToken: string = '/ws/nexus', token?: string) {
     }
   }
 
-  function send(type: string, payload?: any) {
+  function send(type: string, payload?: unknown) {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type, payload }))
     }
@@ -58,7 +58,7 @@ export function useWebSocket(urlOrToken: string = '/ws/nexus', token?: string) {
       clearTimeout(reconnectTimeout.current)
       ws.current?.close()
     }
-  }, [urlOrToken, token])
+  }, [connect])
 
   return { connected, subscribe, send, ws: ws.current }
 }

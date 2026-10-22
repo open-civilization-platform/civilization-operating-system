@@ -94,7 +94,7 @@ export default function TradeProposalModal({ isOpen, onClose, onSuccess }: Trade
         if (onSuccess) onSuccess()
         onClose()
       }, 1200)
-    } catch (err: any) {
+    } catch {
       // In development / demo mode, display success if backend endpoint is unavailable
       setSuccessMsg('Trade proposal created (local confirmation)')
       setTimeout(() => {

@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import {
-  BarChart3, Globe, Network, Trees, Warehouse, Handshake, ArrowLeftRight, ScrollText, Heart, Beaker, Gamepad2, Trophy, X
-} from 'lucide-react'
+import { Globe, X } from 'lucide-react'
+import { navItems } from './nav-items'
 
 export interface SidebarProps {
   isOpen?: boolean
   onClose?: () => void
 }
-
-export const navItems = [
-  { path: '/', label: 'Dashboard', icon: BarChart3 },
-  { path: '/civilizations', label: 'Civilizations', icon: Globe },
-  { path: '/nexus', label: 'Nexus Mesh', icon: Network },
-  { path: '/resources', label: 'Resources', icon: Trees },
-  { path: '/production', label: 'Production', icon: Warehouse },
-  { path: '/logistics', label: 'Logistics', icon: Handshake },
-  { path: '/trade', label: 'Trade', icon: ArrowLeftRight },
-  { path: '/constitution', label: 'Governance', icon: ScrollText },
-  { path: '/social', label: 'Social', icon: Heart },
-  { path: '/tech-tree', label: 'Technology', icon: Beaker },
-  { path: '/simulation', label: 'Simulation', icon: Gamepad2 },
-  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-]
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const location = useLocation()

@@ -1,132 +1,114 @@
 # Civilization Operating System
 
-A resource-based economy platform where players found, manage, and grow civilizations on an interactive world map.
+A resource-based civilization platform with an interactive world map. The repository contains a React web client, a Spring Boot application, and a separately runnable Cortex worker.
 
 ## Features
 
-- **Interactive World Map** — Choose regions based on resource availability (food, water, minerals, energy, housing)
-- **Multi-Civilization & Agent Collaboration** — Found or join existing civilizations as cooperative agents
-- **Citizen Roles & Elections Badge** — Roles (FOUNDER, CITIZEN, DELEGATE) with reputation-based candidacy and automatic electoral tallies
-- **Robot Fleet Control Panel** — Task priority allocation sliders that dynamically direct local Cortex fabrication
-- **nexus Neural Mesh Network** — Autonomous AI agents (nexus nodes) form a mesh network between civilizations
-- **Autonomous Mesh Trading** — Automatic resource bartering and worker transits logged on the Nexus mesh during deficits
-- **Citizen Migration Transit** — Request relocation to another civilization with Delegate entry approvals
-- **Tech Tree** — Research technologies to unlock bonuses and advance your civilization
-- **Trade System** — Propose and manage trade agreements with other civilizations
-- **Game Events** — Random events (discoveries, disasters, breakthroughs) affect gameplay
-- **Cortex Engine** — Real-time simulation engine governing automated decision-making and priority Fabrication
-- **Real-Time Communication** — WebSocket + SSE for live mesh updates with canvas transaction pulses
-- **PWA Support** — Install as a standalone app on mobile/desktop
-
-## Tech Stack
-
-- **Backend**: Java 25, Spring Boot 4.0.3, Spring Framework 7
-- **Frontend**: Thymeleaf, HTMX, Leaflet Maps, Canvas API
-- **Database**: PostgreSQL 17 + PostGIS, Flyway migrations
-- **Messaging**: WebSocket, Server-Sent Events (SSE)
-- **Auth**: JWT + HTTP Basic
-- **Cache**: Caffeine (5min TTL)
-- **Rate Limiting**: Bucket4j (100 req/min per IP)
-- **API Docs**: SpringDoc OpenAPI 2.8.5
-
-## Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- Java 25 (for development)
-
-### Run with Docker
-```bash
-make docker-up
-# or
-docker-compose up -d --build
-```
-
-### Run in dev mode
-```bash
-make run
-# or
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-### Run tests
-```bash
-make test
-# or
-./mvnw test
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CIVILIZATION_SCALE` | `LOCAL` | Seed data scale (LOCAL, REGIONAL, CONTINENTAL, GLOBAL) |
-| `CIVILIZATION_ADMIN_USER` | `admin` | Admin username for HTTP Basic auth |
-| `CIVILIZATION_ADMIN_PASSWORD` | `admin` | Admin password |
-| `JWT_SECRET` | (dev secret) | Secret key for JWT tokens |
-| `SPRING_PROFILES_ACTIVE` | `prod` | Spring profile (dev, prod, test) |
-| `POSTGRES_USER` | `postgres` | Database username |
-| `POSTGRES_PASSWORD` | `postgres` | Database password |
-
-### Civilization Scales
-
-| Scale | Regions | Description |
-|-------|---------|-------------|
-| LOCAL | 3 | Small settlement, local resources |
-| REGIONAL | 4 | Multi-community, regional logistics |
-| CONTINENTAL | 5 | Cross-continent infrastructure |
-| GLOBAL | 6 | Planetary-scale civilization |
-
-## API Documentation
-
-With the app running, visit:
-- Swagger UI: `http://localhost:8080/swagger-ui`
-- OpenAPI JSON: `http://localhost:8080/api-docs`
-- Health: `http://localhost:8080/actuator/health`
-
-### Key Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/auth/connect` | Get JWT token |
-| GET | `/api/v1/regions` | List resource regions |
-| POST | `/api/v1/civilizations/found` | Found a civilization |
-| GET | `/api/v1/civilizations/{id}` | Get civilization details |
-| GET | `/api/v1/nexus/nodes` | List nexus nodes |
-| GET | `/api/v1/nexus/stream` | SSE stream for mesh messages |
-| GET | `/api/v1/tech-tree/{civId}` | Get tech tree |
-| POST | `/api/v1/trade` | Propose trade |
-| GET | `/api/v1/events/{civId}` | Get game events |
-| GET | `/api/v1/leaderboard` | Civilization leaderboard |
+- Interactive world map and resource regions
+- Civilizations, citizens, governance, elections, and migration
+- Resource production, needs, logistics, and trade
+- Nexus mesh, events, and simulation services
+- Cortex worker for automated decisions
+- Live updates through WebSocket and server-sent events where supported
 
 ## Architecture
 
+- **Frontend:** React, TypeScript, and Vite. The production frontend container serves the compiled app with Nginx.
+- **Backend:** Java 25 and Spring Boot 4. The root Maven project is a modular monolith with REST controllers and GraphQL; Nginx also routes live connections to the backend.
+- **Worker:** Cortex runs as a separate process/container using the same root Maven project and its worker profile.
+- **Data and messaging:** PostgreSQL 17 with PostGIS and Redis are used by the application. The full Compose stack also includes Kafka and Debezium.
+- **Service scaffolding:** `services/` contains a separate Maven reactor/scaffold. Root CI and the Dockerfiles build the root application, not those scaffold modules.
+
+## Quick start
+
+### Prerequisites
+
+- Docker and Docker Compose for the containerized stack
+- Java 25 for backend development
+- Node.js 24 and npm for frontend development
+
+### Core Compose services
+
+```bash
+make docker-up
 ```
-┌─────────────────────────────────────────────┐
-│               Web Clients                    │
-│  (Browser / PWA / Mobile)                   │
-└──────────────┬──────────────────────────────┘
-               │ HTTP / WS / SSE
-┌──────────────▼──────────────────────────────┐
-│         Nginx Load Balancer                  │
-└──────────────┬──────────────────────────────┘
-               │
-┌──────────────▼──────────────────────────────┐
-│         Spring Boot Application(s)           │
-│  ┌──────┬──────┬──────┬──────┬──────┬──────┐ │
-│  │Civ   │nexus│Trade │Events│Tech  │Cortex│ │
-│  │Module│Module│Module│Module│Tree  │Engine│ │
-│  └──────┴──────┴──────┴──────┴──────┴──────┘ │
-└──────────────┬──────────────────────────────┘
-               │
-┌──────────────▼──────────────────────────────┐
-│         PostgreSQL + PostGIS                 │
-└─────────────────────────────────────────────┘
+
+This builds and starts PostgreSQL, the Spring Boot `app` and `app-primary` instances, and dependencies required by the application. It does not start the frontend, Cortex worker, Kafka, or Debezium.
+
+### Full Compose stack
+
+```bash
+make docker-up-all
+```
+
+This builds and starts all services in `docker-compose.yml`, including the frontend, Nginx, Cortex worker, Kafka, and Debezium. The frontend is exposed on port 3000 and the Nginx entry point on port 80; the application is exposed on port 8080 and the worker on port 9090.
+
+To stop the stack:
+
+```bash
+make docker-down
+```
+
+### Local development
+
+Run the backend with the development profile (H2):
+
+```bash
+make run
+```
+
+Run the frontend dev server in a separate terminal:
+
+```bash
+make frontend-dev
+```
+
+The production frontend image currently uses Node 20 to build its assets, while frontend CI uses Node 24. Keep those toolchains aligned in a follow-up change.
+
+### Build and checks
+
+```bash
+make build
+make test
+make build-frontend
+```
+
+Pull requests run the Java validation/test workflow and the frontend lint, Vitest, and production build checks. The root workflow does not build the `services/` scaffold.
+
+## API entry points
+
+When the backend is running directly or through Compose:
+
+- REST API routes are rooted at `/api/v1/`.
+- GraphQL is available at `/graphql`.
+- Spring Boot health is available at `/actuator/health`.
+- OpenAPI JSON and Swagger UI are configured by the active Spring profile; check `src/main/resources/application.yml` and `src/main/resources/application-prod.yml` for the exact paths.
+- The Nexus module exposes a server-sent event stream at `/api/v1/nexus/stream`.
+
+## Configuration
+
+Compose accepts these commonly used environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CIVILIZATION_SCALE` | `LOCAL` | Seed scale (`LOCAL`, `REGIONAL`, `CONTINENTAL`, or `GLOBAL`) |
+| `CIVILIZATION_ADMIN_USER` | `admin` | Admin username |
+| `CIVILIZATION_ADMIN_PASSWORD` | `admin` | Admin password |
+| `POSTGRES_USER` | `postgres` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | `postgres` | PostgreSQL password |
+| `SPRING_PROFILES_ACTIVE` | `prod` | Spring profile used by the app container |
+
+The defaults are intended for local development. Set credentials appropriate to your environment before exposing the stack beyond your machine.
+
+## Repository layout
+
+```text
+frontend/   React/Vite application and frontend container
+src/        Root Spring Boot application and Cortex worker
+services/   Separate service scaffold/reactor
+debezium/   CDC connector setup
 ```
 
 ## License
 
 MIT
-

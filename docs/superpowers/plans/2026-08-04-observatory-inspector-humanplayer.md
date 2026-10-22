@@ -18,7 +18,7 @@
 
 - [x] **Step 1: Create `PlanetaryTelemetry.java` record and `PlanetaryObservatoryService.java` and unit tests**
 - [x] **Step 2: Create `AgentIntrospection.java` record and `SimulationInspectorService.java` and unit tests**
-- [ ] **Step 3: Run `./mvnw test` to verify unit tests pass**
+- [x] **Step 3: Run `./mvnw test` to verify unit tests pass**
 - [ ] **Step 4: Commit Task 1**
 
 ---
@@ -34,11 +34,12 @@
 
 - [x] **Step 1: Create `HumanPlayer.java` record and `HumanPlayerService.java` and unit tests**
 - [x] **Step 2: Inject `PlanetaryObservatoryService`, `SimulationInspectorService`, and `HumanPlayerService` into `SimulationEngineService.java` with `@Autowired`**
-- [ ] **Step 3: Run `./mvnw test` to verify 100% green build**
-- [ ] **Step 4: Push branch `feat/observatory-inspector-humanplayer`, open a separate draft PR, and watch CI**
+- [x] **Step 3: Run `./mvnw test` to verify 100% green build**
+- [x] **Step 4: Push branch `feat/observatory-inspector-humanplayer`, open a separate draft PR, and watch CI**
 
 ## Execution Notes
 
 - PR #85 currently targets issue #26 (federated learning), so it is unrelated to this plan and remains untouched. This work will use its own draft PR.
 - Focused verification: `./mvnw -Dtest=SimulationEngineServiceTest,PlanetaryObservatoryServiceTest,SimulationInspectorServiceTest,HumanPlayerServiceTest test` — 14 tests passed.
-- Full-suite verification remains pending: integration contexts require Redis; attempts to start the shared Testcontainers Redis failed because the Docker daemon was unavailable.
+- GitHub Actions CI for PR #86 ran 293 tests with 0 failures and 0 errors (1 skipped); build-and-test, lint, and all CodeQL checks passed. Docker build was skipped by the workflow.
+- Local full-suite verification was unavailable because Redis integration contexts require Docker, and the local Docker daemon was not listening.

@@ -22,6 +22,7 @@ import io.github.opencivilizationplatform.modules.physics.application.PhysicsEng
 import io.github.opencivilizationplatform.modules.life.application.AgentKnowledgeService;
 import io.github.opencivilizationplatform.modules.production.application.ToolforgeService;
 import io.github.opencivilizationplatform.modules.cortex.application.AgentBrainRuntimeService;
+import io.github.opencivilizationplatform.modules.cortex.application.SimulationInspectorService;
 import io.github.opencivilizationplatform.modules.physics.application.ResourceStewardshipService;
 import io.github.opencivilizationplatform.modules.region.application.ExplorationColonyService;
 import io.github.opencivilizationplatform.modules.strategy.application.SocietalEvolutionService;
@@ -33,7 +34,9 @@ import io.github.opencivilizationplatform.modules.physics.application.DayNightCy
 import io.github.opencivilizationplatform.modules.social.application.CivilizationChronicleService;
 import io.github.opencivilizationplatform.modules.nexus.application.PluginSdkService;
 import io.github.opencivilizationplatform.modules.social.application.TourismPilgrimageService;
+import io.github.opencivilizationplatform.modules.social.application.HumanPlayerService;
 import io.github.opencivilizationplatform.modules.trade.application.MonetaryEconomyService;
+import io.github.opencivilizationplatform.modules.universe.application.PlanetaryObservatoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -133,6 +136,15 @@ class SimulationEngineServiceTest {
     @Mock
     private MonetaryEconomyService monetaryEconomyService;
 
+    @Mock
+    private PlanetaryObservatoryService planetaryObservatoryService;
+
+    @Mock
+    private SimulationInspectorService simulationInspectorService;
+
+    @Mock
+    private HumanPlayerService humanPlayerService;
+
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -154,6 +166,9 @@ class SimulationEngineServiceTest {
         assertEquals(0, status.getActiveRulesCount());
         verify(balanceService, never()).getBalanceReport();
         verify(lawExecutionEngine, never()).evaluateAndApplyLaws(any(), any());
+        verify(planetaryObservatoryService).processObservatoryTick();
+        verify(simulationInspectorService).processInspectorTick();
+        verify(humanPlayerService).processHumanPlayerTick();
     }
 
     @Test

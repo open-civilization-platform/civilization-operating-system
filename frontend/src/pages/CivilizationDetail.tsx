@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
-  Globe, Users, Shield, MapPin, Calendar, Activity,
-  TrendingUp, ArrowLeft, Loader2, Clock, GitBranch
+  Globe, MapPin, Activity, TrendingUp, ArrowLeft, Loader2, Clock
 } from 'lucide-react'
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
@@ -36,7 +35,7 @@ export default function CivilizationDetail() {
   const { id = '1' } = useParams()
   const [civData, setCivData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)

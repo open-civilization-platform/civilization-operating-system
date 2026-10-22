@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Wifi, Activity, Cpu, Server, Radio, ShieldCheck } from 'lucide-react'
+import { Cpu, Radio } from 'lucide-react'
 
 export interface NexusNode {
   id: string

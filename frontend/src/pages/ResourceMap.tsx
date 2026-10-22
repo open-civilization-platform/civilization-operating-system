@@ -1,16 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@apollo/client'
-import { GET_REGIONS, GET_RESOURCES } from '../graphql/queries'
+import { GET_REGIONS } from '../graphql/queries'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { MapPin, Loader2, AlertCircle, Inbox } from 'lucide-react'
 
 export default function ResourceMap() {
   const [selected, setSelected] = useState<string | number | null>(null)
   const { data: regionsData, loading: regionsLoading, error: regionsError } = useQuery(GET_REGIONS)
-  const { data: resourcesData } = useQuery(GET_RESOURCES)
 
   const regionsList = regionsData?.regions || []
-  const resourcesList = resourcesData?.resources || []
 
   if (regionsLoading) {
     return (

@@ -2,11 +2,11 @@ import { useEffect, useCallback, useRef } from 'react'
 
 interface RealtimeConfig {
   token?: string
-  onResourceTick?: (data: any) => void
-  onNexusMessage?: (data: any) => void
-  onVoxtexMessage?: (data: any) => void
-  onCivilizationEvent?: (data: any) => void
-  onSimulationTick?: (data: any) => void
+  onResourceTick?: (data: unknown) => void
+  onNexusMessage?: (data: unknown) => void
+  onVoxtexMessage?: (data: unknown) => void
+  onCivilizationEvent?: (data: unknown) => void
+  onSimulationTick?: (data: unknown) => void
   onStatusChange?: (connected: boolean) => void
 }
 
@@ -81,7 +81,7 @@ export function useRealtimeUpdates({
     }
   }, [connect])
 
-  const send = useCallback((type: string, payload?: any) => {
+  const send = useCallback((type: string, payload?: unknown) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type, payload }))
     }

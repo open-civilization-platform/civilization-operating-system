@@ -8,6 +8,7 @@ import io.github.opencivilizationplatform.modules.life.application.HealthDisease
 import io.github.opencivilizationplatform.modules.life.application.AgentKnowledgeService;
 import io.github.opencivilizationplatform.modules.production.application.ToolforgeService;
 import io.github.opencivilizationplatform.modules.cortex.application.AgentBrainRuntimeService;
+import io.github.opencivilizationplatform.modules.cortex.application.SimulationInspectorService;
 import io.github.opencivilizationplatform.modules.physics.application.ClimateDisasterService;
 import io.github.opencivilizationplatform.modules.production.application.ComplexGoodsProductionService;
 import io.github.opencivilizationplatform.modules.diplomacy.application.DiplomacyEngineService;
@@ -28,8 +29,10 @@ import io.github.opencivilizationplatform.modules.social.application.TourismPilg
 import io.github.opencivilizationplatform.modules.trade.application.MonetaryEconomyService;
 import io.github.opencivilizationplatform.modules.simulation.api.dto.SimulationStatusResponse;
 import io.github.opencivilizationplatform.modules.social.application.ImmigrationService;
+import io.github.opencivilizationplatform.modules.social.application.HumanPlayerService;
 import io.github.opencivilizationplatform.modules.strategy.application.BalanceService;
 import io.github.opencivilizationplatform.modules.universe.application.UniverseService;
+import io.github.opencivilizationplatform.modules.universe.application.PlanetaryObservatoryService;
 import io.github.opencivilizationplatform.modules.physics.application.PhysicsEngineService;
 import io.github.opencivilizationplatform.modules.physics.application.ResourceStewardshipService;
 import io.github.opencivilizationplatform.modules.region.application.ExplorationColonyService;
@@ -45,6 +48,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -84,6 +88,9 @@ public class SimulationEngineService {
     private final PluginSdkService pluginSdkService;
     private final TourismPilgrimageService tourismPilgrimageService;
     private final MonetaryEconomyService monetaryEconomyService;
+    private final PlanetaryObservatoryService planetaryObservatoryService;
+    private final SimulationInspectorService simulationInspectorService;
+    private final HumanPlayerService humanPlayerService;
 
     private final AtomicInteger tickCounter = new AtomicInteger(0);
     private final AtomicReference<String> lastDecision = new AtomicReference<>("Initializing Civilization Cortex...");
@@ -121,7 +128,10 @@ public class SimulationEngineService {
                                    CivilizationChronicleService civilizationChronicleService,
                                    PluginSdkService pluginSdkService,
                                    TourismPilgrimageService tourismPilgrimageService,
-                                   MonetaryEconomyService monetaryEconomyService) {
+                                   MonetaryEconomyService monetaryEconomyService,
+                                   PlanetaryObservatoryService planetaryObservatoryService,
+                                   SimulationInspectorService simulationInspectorService,
+                                   HumanPlayerService humanPlayerService) {
         this.ruleService = ruleService;
         this.balanceService = balanceService;
         this.objectMapper = objectMapper;
@@ -151,6 +161,9 @@ public class SimulationEngineService {
         this.pluginSdkService = pluginSdkService;
         this.tourismPilgrimageService = tourismPilgrimageService;
         this.monetaryEconomyService = monetaryEconomyService;
+        this.planetaryObservatoryService = planetaryObservatoryService;
+        this.simulationInspectorService = simulationInspectorService;
+        this.humanPlayerService = humanPlayerService;
     }
 
     public SimulationEngineService(RuleService ruleService,
@@ -164,7 +177,8 @@ public class SimulationEngineService {
         this(ruleService, balanceService, objectMapper, universeService, physicsEngineService,
              agentMetabolismService, territoryControlService, lawExecutionEngine,
              null, null, null, null, null, null, null, null, null,
-             null, null, null, null, null, null, null, null, null, null, null, null);
+             null, null, null, null, null, null, null, null, null, null, null, null,
+             null, null, null);
     }
 
     public UniverseService getUniverseService() {
@@ -278,6 +292,16 @@ public class SimulationEngineService {
         log.info("[CORTEX TICK {}] Simulation cycle starting...", tick);
 
         lastTickTime.set(LocalDateTime.now());
+
+        if (planetaryObservatoryService != null) {
+            planetaryObservatoryService.processObservatoryTick();
+        }
+        if (simulationInspectorService != null) {
+            simulationInspectorService.processInspectorTick();
+        }
+        if (humanPlayerService != null) {
+            humanPlayerService.processHumanPlayerTick();
+        }
 
         List<Rule> rules = ruleService.getValidatedRules();
         if (rules == null || rules.isEmpty()) {
@@ -394,7 +418,7 @@ public class SimulationEngineService {
                             .ifPresent(b -> {
                                 double percentage = b.getPercentageMet();
                                 if (percentage < 100) {
-                                    String decision = String.format("[%s] DECISION: %s deficiency detected (%.1f%%). Rule '%s' fired.",
+                                    String decision = String.format(Locale.ROOT, "[%s] DECISION: %s deficiency detected (%.1f%%). Rule '%s' fired.",
                                         timestamp, metricCat, percentage, rule.getTitle());
                                     pushDecision(decision);
                                     log.info(decision);
@@ -402,7 +426,7 @@ public class SimulationEngineService {
                             });
                     }
                 } else if ("THRESHOLD_TRIGGER".equals(type)) {
-                    String decision = String.format("[%s] AUDIT: Rule '%s' evaluation complete. No threshold breached.",
+                    String decision = String.format(Locale.ROOT, "[%s] AUDIT: Rule '%s' evaluation complete. No threshold breached.",
                         timestamp, rule.getTitle());
                     pushDecision(decision);
                     log.info(decision);

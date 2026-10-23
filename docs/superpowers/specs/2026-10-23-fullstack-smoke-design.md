@@ -38,7 +38,7 @@ The script waits, with explicit timeouts, for:
 - The frontend through the Nginx root route.
 - Debezium Connect's connector API.
 
-Then it obtains a client token from /api/v1/auth/connect, creates a uniquely named civilization through POST /api/v1/civilizations, and queries GraphQL to confirm the same name is present. It opens an authenticated connection to /ws/nexus using the returned JWT and asserts the WebSocket handshake succeeds. It registers the checked-in Debezium connector configuration using the existing setup script and verifies that the named connector is present in the Connect registry.
+Then it obtains a client token from /api/v1/auth/connect, creates a uniquely named civilization through POST /api/v1/civilizations, and queries GraphQL to confirm the same name is present. It opens an authenticated connection to /ws/nexus?token=<JWT> using the returned JWT, matching WebSocketAuthInterceptor, and asserts the WebSocket handshake succeeds. Do not print the token or tokenized URL in logs. It registers the checked-in Debezium connector configuration using the existing setup script and verifies that the named connector is present in the Connect registry.
 
 The test must not depend on seeded civilization names or assume fixed database IDs. Its unique Compose project and generated civilization name make repeated local runs distinguishable. All assertions report the failed endpoint or service and preserve logs before teardown.
 
@@ -50,7 +50,7 @@ Any readiness timeout, non-success HTTP response, missing GraphQL result, failed
 
 - Use the existing REST, GraphQL, worker, WebSocket, and Debezium contracts.
 - The CI job runs independently from the existing Java and frontend checks and does not replace them.
-- CI uses the Compose v2 plugin, curl, and Node.js 24 for an authenticated WebSocket client. Keep the smoke script's inputs configurable so the default ports work locally while CI can override them.
+- CI uses the Compose v2 plugin, curl, and Node.js 24 for an authenticated WebSocket client. Local use requires Bash on Linux/macOS or WSL/Git Bash on Windows, plus Docker Compose v2; native PowerShell is out of scope for this .sh script. Keep the script inputs configurable so default ports work locally while CI can override them.
 - Keep issue #13's CDC data-event assertions out of this job; this issue verifies connector registration and health only.
 
 ## Acceptance criteria
@@ -60,6 +60,3 @@ Any readiness timeout, non-success HTTP response, missing GraphQL result, failed
 - The script proves REST-created civilization data is visible in GraphQL.
 - The script verifies the frontend, worker, authenticated WebSocket handshake, and Debezium connector health.
 - A dedicated pull-request CI job runs the script, preserves logs on failure, and reports failures clearly.
-
-
-

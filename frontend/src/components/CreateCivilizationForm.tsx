@@ -36,7 +36,7 @@ export default function CreateCivilizationForm({ onClose, onSucceeded, sagaProgr
   const succeeded = useRef(false)
   const successCallback = useRef(onSucceeded)
   successCallback.current = onSucceeded
-  const { data, loading: regionsLoading, error: regionsError } = useQuery<{ regions: { id: string; name: string }[] }>(GET_REGIONS, { variables: { claimed: false } })
+  const { data, loading: regionsLoading, error: regionsError } = useQuery<{ regions: { id: string; name: string }[] }>(GET_REGIONS, { variables: { claimed: false }, fetchPolicy: 'network-only' })
 
   const retain = useCallback((value: PendingSubmission | null) => {
     pendingRef.current = value

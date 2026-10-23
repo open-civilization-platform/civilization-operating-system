@@ -13,6 +13,11 @@ import java.util.UUID;
 
 @Service
 public class FoundCivilizationSagaService {
+    private static final int MAX_NODE_NAME_LENGTH = 255;
+    private static final String NODE_NAME_SUFFIX = "-Primary";
+    private static final int MAX_CIVILIZATION_NAME_LENGTH = MAX_NODE_NAME_LENGTH - NODE_NAME_SUFFIX.length();
+    private static final int MAX_IDEMPOTENCY_KEY_LENGTH = 255;
+
     private final SagaExecutionRepository executions;
     private final TransactionTemplate transactions;
 
@@ -26,8 +31,8 @@ public class FoundCivilizationSagaService {
             || idempotencyKey.isBlank() || request.name() == null || request.name().isBlank()
             || request.regionId() == null) throw new IllegalArgumentException("Missing saga submission field");
         String name = request.name().trim();
-        if (name.length() > 255 || idempotencyKey.length() > 255) {
-            throw new IllegalArgumentException("Saga name and idempotency key must be at most 255 characters");
+        if (name.length() > MAX_CIVILIZATION_NAME_LENGTH || idempotencyKey.length() > MAX_IDEMPOTENCY_KEY_LENGTH) {
+            throw new IllegalArgumentException("Saga name or idempotency key exceeds its persistence limit");
         }
         CivilizationScale scale = request.scale() == null ? CivilizationScale.LOCAL : request.scale();
         String fingerprint = fingerprint(name, scale, request.regionId());

@@ -3,6 +3,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import CreateCivilizationForm from '../components/CreateCivilizationForm'
 import { GET_REGIONS } from '../graphql/queries'
+import { useState } from 'react'
 
 const accepted = {
   sagaId: 'saga-1', status: 'RUNNING', currentStep: 'CLAIM_REGION', failedStep: null,
@@ -39,6 +40,27 @@ it('postsRegionIdAndIdempotencyKey', async () => {
   expect(request.headers.Authorization).toBe('Bearer jwt')
   expect(request.headers['Idempotency-Key']).toEqual(expect.any(String))
   expect(request.headers['Idempotency-Key'].length).toBeGreaterThan(10)
+})
+it('reloads available regions after a successful REST saga when the form reopens', async () => {
+  fetcher.mockImplementation(async (url: string) => new Response(JSON.stringify(url.endsWith('connect')
+    ? { token: 'jwt', clientId: 'owner', expiresIn: 3600 }
+    : { ...accepted, status: 'SUCCEEDED', sequence: 7 })))
+  function RepeatOpen() {
+    const [open, setOpen] = useState(true)
+    return <MockedProvider mocks={[
+      { request: { query: GET_REGIONS, variables: { claimed: false } }, result: { data: { regions: [region] } } },
+      { request: { query: GET_REGIONS, variables: { claimed: false } }, result: { data: { regions: [{ ...region, id: '8', name: 'Highlands' }] } } },
+    ]}>
+      {open ? <CreateCivilizationForm onClose={() => setOpen(false)} /> : <button onClick={() => setOpen(true)}>Open creation</button>}
+    </MockedProvider>
+  }
+  render(<RepeatOpen />)
+  await submit()
+  await screen.findByText('Succeeded')
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Open creation' }))
+  expect(await screen.findByRole('option', { name: 'Highlands' })).toBeInTheDocument()
+  expect(screen.queryByRole('option', { name: 'Riverlands' })).not.toBeInTheDocument()
 })
 it('rendersThreeNamedStepsFromAcceptedResponse', async () => {
   render(view()); await submit()

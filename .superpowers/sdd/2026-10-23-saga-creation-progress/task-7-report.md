@@ -2,7 +2,7 @@
 
 Base: `5d5cc7c`, branch `feature/issue-12-saga-flow`.
 
-Status: backend verified and ready for review; frontend regression/fix verification remains pending. Task 7 is not complete yet.
+Status: complete. Independent review finding addressed and re-reviewed; no new issues found.
 
 ## Scope and integration proof
 
@@ -19,15 +19,15 @@ Ten executed scenarios cover:
 - Typed events produced from committed worker transitions pass through two distinct subscriber/handler registries; only the owner's captured socket receives them. The terminal event matches the reloaded sequence/status and omits routing metadata.
 - Three parameterized lease recovery cases, one for each fixed effect. The test commits a POTENTIALLY_APPLIED marker, applies the real effect, retains its durable rows without the success marker, clears/reloads JPA state, advances a controlled clock beyond the lease, and constructs new service/steps/worker instances. A live lease blocks recovery; the expired lease recovers with persisted attempts, preserved civilization/node identity, unique effects, and successful terminal state.
 - A real region-already-claimed domain failure enters COMPENSATING. Expiring the lease immediately after publishing that committed transition interrupts the first worker. A reconstructed worker injects a failure only at the claim compensation boundary; real civilization compensation still persists FALLEN, foreign region ownership survives, no node is deployed, and COMPENSATION_FAILED plus its cleanup error remain visible through HTTP after another worker reconstruction.
-- Oversized 256-character name/key returns 400 with no saga row; 255-character fields are accepted into PENDING persistence. The boundary test establishes submission storage acceptance, not a separate full-effect success guarantee for a 255-character generated node name.
+- Oversized 248-character civilization names and 256-character keys return 400 with no saga row. A 247-character civilization name produces a 255-character `-Primary` node and completes the saga; a 255-character idempotency key is accepted.
 - Malformed JSON, missing idempotency header, and malformed saga UUID remain 400 with the starter advice active.
 - A concrete repository-boundary `DataAccessResourceFailureException` returns safe 500 without a saga ID or private database details; no row is inserted.
 
 ## Reproduced contract gaps and minimal fixes
 
-1. Length validation: before the fix, a 256-character name/key reached actual VARCHAR(255) constraints (SQLState 22001). Added a pre-persistence check in `FoundCivilizationSagaService` for the trimmed name and exact idempotency key, each at most 255 characters.
+1. Length validation: before the fix, a 256-character name/key reached actual VARCHAR(255) constraints (SQLState 22001). A fresh review found the generated `-Primary` node suffix adds 8 characters; the final pre-persistence limits are 247 for the trimmed civilization name and 255 for the exact idempotency key.
 2. HTTP advice precedence: real integration initially returned 200 for conflict and constraint failures. Inspection of installed `reaktor-spring-mvc-starter:0.1.1` using `javap -v` showed `ReaktorGlobalExceptionHandler` has `@Order(-2147483648)` and an Exception catch-all returning a body without a failure status. Added saga-controller-local handlers for 400/404/409 plus an unexpected-failure 500 fallback; the shared response helper reuses the existing `ErrorResponse` format. The 500 response uses a fixed message and logs the exception server-side. No global starter behavior changed.
-3. Frontend cache regression/fix: pending coordinated RED execution at this draft point.
+3. Frontend available-region freshness: re-opening the creation modal after a successful REST saga could reuse Apollo's cached `GET_REGIONS(claimed: false)` result and offer a region already claimed by the new civilization. Changed this query to `network-only`. The regression test first failed with stale `Riverlands`, then passed with the fresh `Highlands` response.
 
 For focused legacy SpringBootTests, added a test-only mocked `TaskScheduler` in the repository, service, worker, and Redis-subscriber test classes. Spring still discovers scheduled methods, but the external scheduler boundary never starts automatic background jobs; these tests drive workers/transactions explicitly. Existing named Redis listener replacements remain intact. No production scheduling or infrastructure failure behavior was suppressed.
 
@@ -40,16 +40,20 @@ All paths below are relative to this worktree; raw logs are ignored local eviden
 - After local typed handlers, bounds RED (`task-7-backend-bounds-red.log`): 7 tests, only the two oversized-input failures remain; conflict/owner status and all real effects pass.
 - After bounds validation and expanded binding/boundary assertions, isolated GREEN (`task-7-backend-green.log`): 9 tests, 0 failures/errors. Final strengthened real-compensation version passed in 26.925s.
 - Unexpected DB failure RED (`task-7-backend-fallback-red.log`): 10 tests, 1 failure, 0 errors; expected 500 but got 200. This preceded the local safe fallback.
-- Final backend focus (`task-7-backend-focused.log`), exit 0, **72 tests, 0 failures, 0 errors, 0 skipped**, 61 seconds:
+- Final backend focus rerun after review fix, exit 0, **72 tests, 0 failures, 0 errors, 0 skipped**, 34 seconds:
 
 ```powershell
 .\mvnw.cmd '-Dtest=SagaExecutionRepositoryTest,FoundCivilizationSagaStepsTest,FoundCivilizationSagaServiceTest,FoundCivilizationSagaWorkerTest,SagaControllerTest,SagaProgressRedisSubscriberTest,NexusWebSocketHandlerTest,FoundCivilizationSagaPersistenceIntegrationTest' test
 ```
 
 - No scheduling-thread/Cortex tick or actual localhost connection error appears in the final focused log. `Redis offline` stack traces are the existing deliberate publisher-failure injection. JVM dynamic-agent/native-access and existing deprecated-test-API warnings remain.
-- Frontend initial sandbox attempt failed before tests because esbuild child-process launch returned `spawn EPERM`. The focused escalated tool request then remained pending and was canceled by the coordinator after about 670 seconds. That cancellation is not evidence of a human refusal; no frontend RED result came from that invocation.
-- Frontend focused tests/build: pending coordinated execution at this draft point.
-- `git diff --check`: exit 0; Git emitted line-ending conversion warnings only.
+- Frontend regression RED (`npm test -- --run src/test/CreateCivilizationForm.test.tsx`): 8 tests, 1 failed on stale `Riverlands` instead of fresh `Highlands`.
+- Frontend GREEN focused (`npm test -- --run src/test/session.test.ts src/test/CreateCivilizationForm.test.tsx src/test/useRealtimeUpdates.test.tsx`): exit 0, **11 tests, 0 failures**.
+- Full frontend suite (`npm test`): exit 0, **52 tests, 0 failures** across 14 files. Existing Apollo mock/deprecation warnings remain noisy in `App.test.tsx`.
+- Production frontend build (`npm run build`): exit 0; TypeScript and Vite production bundle completed.
+- Frontend lint (`npm run lint`): exit 0, 0 errors and 37 existing `no-explicit-any` warnings across pages/tests.
+- Fresh review identified an important long-name failure (accepted civilization name plus `-Primary` could exceed the node column). Added an integration boundary regression: 248-character name failed RED with HTTP 202; after the 247-character guard, the 247-character name completed with a 255-character node name. The full 72-test backend focus passed after this fix. The reviewer re-checked the patch and marked the finding addressed with no new issues.
+- `git -c core.whitespace=cr-at-eol diff --check` is the appropriate whitespace check for this Windows checkout; plain Git reports CRLF characters as trailing whitespace.
 
 ## Self-review and exact limits
 
@@ -59,4 +63,4 @@ All paths below are relative to this worktree; raw logs are ignored local eviden
 - Automatic polling/simulation and full-application event listeners/seed effects are excluded from the new isolated flow proof. The relevant fixed domain services, database mutations, and saga transaction sequencing run for real.
 - Preserved V23 unchanged. No V24, baseline-schema, naming-strategy, root #8 infrastructure, or generic workflow changes were made. The root reserves Compose infrastructure for #8 and will validate combined production boot after reconciliation; no broad Java/Docker/Compose rerun was attempted in Task 7.
 - Preserved the coordinator's factual correction in tracked `task-5-report.md` and include it with this task's documentation.
-- No subagents, push, PR, or merge used.
+- No push or merge used at this report checkpoint; PR creation follows commit verification.

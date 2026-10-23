@@ -241,7 +241,7 @@ class FoundCivilizationSagaPersistenceIntegrationTest {
     @ParameterizedTest @ValueSource(strings = {"name", "key"})
     void rejectsOversizedSubmissionWithoutPersistingSaga(String field) throws Exception {
         command("alice", field.equals("key") ? "k".repeat(256) : "valid",
-            field.equals("name") ? "n".repeat(256) : "Valid").andExpect(status().isBadRequest());
+            field.equals("name") ? "n".repeat(248) : "Valid").andExpect(status().isBadRequest());
         assertEquals(0, executions.count());
     }
 
@@ -260,9 +260,13 @@ class FoundCivilizationSagaPersistenceIntegrationTest {
     }
 
     @Test void acceptsFieldsAtThePersistenceBoundary() throws Exception {
-        UUID id = submit("alice", "k".repeat(255), "n".repeat(255));
-        assertEquals(SagaStatus.PENDING, reload(id).getStatus());
+        String maxSafeName = "n".repeat(247);
+        UUID id = submit("alice", "k".repeat(255), maxSafeName);
+        assertTrue(worker(steps).processNextDue());
+        assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
         assertEquals(1, executions.count());
+        assertEquals(255, nodes.findBySagaId(id).orElseThrow().getName().length());
+        assertEquals(maxSafeName + "-Primary", nodes.findBySagaId(id).orElseThrow().getName());
     }
 
     @Test void unavailableDatabaseReturnsSafeServerErrorInsteadOfFalseSuccess() throws Exception {

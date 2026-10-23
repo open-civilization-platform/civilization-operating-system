@@ -13,6 +13,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.Clock;
 import java.time.Duration;
@@ -21,6 +23,9 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +47,8 @@ class FoundCivilizationSagaWorkerTest {
         clock = new MutableClock();
         published.clear();
         actions.clear();
-        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps, published::add, clock);
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> published.add(snapshot), clock);
         installSteps(null, null, null);
     }
 
@@ -62,15 +68,49 @@ class FoundCivilizationSagaWorkerTest {
     @Test void publishesOnlyCommittedProgress() {
         UUID id = pending();
         List<Long> observedSequences = new ArrayList<>();
-        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps, status -> {
-            SagaExecution committed = executions.findById(status.sagaId()).orElseThrow();
-            assertEquals(status.status(), committed.getStatus());
-            assertEquals(status.sequence(), committed.getSequence());
-            observedSequences.add(status.sequence());
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {
+            SagaExecution committed = executions.findById(sagaId).orElseThrow();
+            assertEquals("owner", ownerId);
+            assertEquals(id, sagaId);
+            assertEquals(snapshot.status(), committed.getStatus());
+            assertEquals(snapshot.sequence(), committed.getSequence());
+            assertEquals(snapshot.currentStep(), currentStep);
+            assertEquals(snapshot.failure(), failure);
+            SagaCompensationView expectedCompensation = snapshot.steps().stream()
+                .filter(step -> step.key().equals(currentStep))
+                .map(SagaStepView::compensation).filter(java.util.Objects::nonNull).findFirst().orElse(null);
+            assertEquals(expectedCompensation, compensation);
+            observedSequences.add(snapshot.sequence());
         }, clock);
         assertTrue(worker.processNextDue());
         assertFalse(observedSequences.isEmpty());
         assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
+    }
+
+    @Test void publishesFailureAndCompensationDetails() {
+        UUID id = pending();
+        List<SagaFailureView> failures = new ArrayList<>();
+        List<SagaCompensationView> compensations = new ArrayList<>();
+        installSteps(ctx -> { throw new IllegalArgumentException("bad region"); }, null, null);
+        when(productionSteps.createCivilization()).thenReturn(step(0,
+            ctx -> { throw new IllegalArgumentException("bad region"); },
+            ctx -> { throw new IllegalStateException("undo failed"); }));
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {
+                assertEquals("owner", ownerId);
+                assertEquals(id, sagaId);
+                assertEquals(snapshot.sequence(), reload(id).getSequence());
+                assertEquals(snapshot.failure(), failure);
+                if (failure != null) failures.add(failure);
+                if (compensation != null) compensations.add(compensation);
+            }, clock);
+        assertTrue(worker.processNextDue());
+        assertTrue(failures.stream().anyMatch(failure -> "DOMAIN".equals(failure.code())));
+        assertTrue(compensations.stream().anyMatch(compensation ->
+            compensation.status() == SagaStepStatus.COMPENSATION_FAILED
+                && "undo failed".equals(compensation.failure().message())));
+        assertEquals(SagaStatus.COMPENSATION_FAILED, reload(id).getStatus());
     }
 
     @Test void retriesTransientFailureAtMostThreeAttempts() {
@@ -109,6 +149,56 @@ class FoundCivilizationSagaWorkerTest {
         assertEquals(1, first(id).getExecutionAttempts());
         assertEquals(SagaStatus.COMPENSATED, reload(id).getStatus());
         assertEquals("DOMAIN", first(id).getLastErrorCode());
+    }
+
+    @Test void retriesWrappedSocketConnectivityFailures() {
+        UUID socketId = pending();
+        installSteps(ctx -> { throw new RuntimeException(new SocketException("reset")); }, null, null);
+        assertTrue(worker.processNextDue());
+        assertEquals("TRANSIENT", first(socketId).getLastErrorCode());
+        UUID routeId = pending();
+        installSteps(ctx -> { throw new RuntimeException(new NoRouteToHostException("unreachable")); }, null, null);
+        assertTrue(worker.processNextDue());
+        assertEquals("TRANSIENT", first(routeId).getLastErrorCode());
+    }
+
+    @Test void staleLeaseHolderCannotWriteOrCompensateAfterReclaim() {
+        UUID id = pending();
+        AtomicInteger invocations = new AtomicInteger();
+        AtomicLong sequenceAfterReclaim = new AtomicLong();
+        FoundCivilizationSagaWorker recovering = new FoundCivilizationSagaWorker(executions, transactions,
+            productionSteps, (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {}, clock);
+        installSteps(ctx -> {
+            if (invocations.incrementAndGet() == 1) {
+                clock.advance(Duration.ofMinutes(5).plusSeconds(1));
+                assertTrue(recovering.processNextDue());
+                sequenceAfterReclaim.set(reload(id).getSequence());
+            }
+        }, null, null);
+        assertTrue(worker.processNextDue());
+        assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
+        assertEquals(sequenceAfterReclaim.get(), reload(id).getSequence());
+        assertEquals(2, invocations.get());
+        assertTrue(actions.stream().noneMatch(action -> action.startsWith("compensate-")));
+    }
+
+    @Test void staleLeaseHolderDoesNotStartEffectAfterReclaim() {
+        UUID id = pending();
+        AtomicInteger executionsOfFirstStep = new AtomicInteger();
+        AtomicBoolean reclaimed = new AtomicBoolean();
+        FoundCivilizationSagaWorker recovering = new FoundCivilizationSagaWorker(executions, transactions,
+            productionSteps, (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {}, clock);
+        installSteps(ctx -> executionsOfFirstStep.incrementAndGet(), null, null);
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {
+                if (snapshot.status() == SagaStatus.RUNNING && reclaimed.compareAndSet(false, true)) {
+                    clock.advance(Duration.ofMinutes(5).plusSeconds(1));
+                    assertTrue(recovering.processNextDue());
+                }
+            }, clock);
+        assertTrue(worker.processNextDue());
+        assertEquals(1, executionsOfFirstStep.get());
+        assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
     }
 
     @Test void failsWithoutCompensationWhenNoEffectWasApplied() {

@@ -16,6 +16,9 @@ public interface SagaExecutionRepository extends JpaRepository<SagaExecution, UU
     Optional<SagaExecution> findByOwnerIdAndIdempotencyKey(String ownerId, String idempotencyKey);
     Optional<SagaExecution> findByIdAndOwnerId(UUID id, String ownerId);
 
+    @Query(value = "SELECT id FROM saga_executions WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<UUID> lockForEffect(@Param("id") UUID id);
+
     @Query("select e.id from SagaExecution e where e.status in "
         + "(io.github.opencivilizationplatform.saga.SagaStatus.PENDING, "
         + "io.github.opencivilizationplatform.saga.SagaStatus.RUNNING, "

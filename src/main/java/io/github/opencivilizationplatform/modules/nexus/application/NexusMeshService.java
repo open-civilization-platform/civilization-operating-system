@@ -5,6 +5,7 @@ import io.github.opencivilizationplatform.core.eventbus.events.NexusMessageSentE
 import io.github.opencivilizationplatform.modules.nexus.domain.*;
 import io.github.opencivilizationplatform.modules.nexus.dto.NexusMessageSyncDTO;
 import io.github.opencivilizationplatform.modules.nexus.infrastructure.*;
+import io.github.opencivilizationplatform.saga.SagaExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +33,7 @@ public class NexusMeshService {
     private final EventBus eventBus;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final SagaExecutionRepository sagaExecutionRepository;
 
     // SSE emitters for real-time streaming
     private final List<Consumer<NexusMessage>> messageListeners = new CopyOnWriteArrayList<>();
@@ -41,13 +43,15 @@ public class NexusMeshService {
                               NexusConnectionRepository connectionRepository,
                               EventBus eventBus,
                               StringRedisTemplate redisTemplate,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              SagaExecutionRepository sagaExecutionRepository) {
         this.nodeRepository = nodeRepository;
         this.messageRepository = messageRepository;
         this.connectionRepository = connectionRepository;
         this.eventBus = eventBus;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.sagaExecutionRepository = sagaExecutionRepository;
     }
 
     // --- Node Management ---
@@ -62,6 +66,8 @@ public class NexusMeshService {
     public NexusNode deployNexusNode(UUID sagaId, String name, NexusNodeType type, String region,
                                      Long civilizationId, String knowledgeBase) {
         if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        sagaExecutionRepository.lockForEffect(sagaId).orElseThrow(() ->
+            new IllegalArgumentException("Saga does not exist: " + sagaId));
         return nodeRepository.findBySagaId(sagaId).orElseGet(() ->
             registerNodeInternal(sagaId, name, type, region, civilizationId, knowledgeBase));
     }

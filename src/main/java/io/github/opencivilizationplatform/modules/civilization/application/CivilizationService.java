@@ -13,6 +13,7 @@ import io.github.opencivilizationplatform.modules.contribution.domain.CitizenWal
 import io.github.opencivilizationplatform.modules.contribution.domain.Role;
 import io.github.opencivilizationplatform.modules.contribution.infrastructure.CitizenRepository;
 import io.github.opencivilizationplatform.modules.contribution.infrastructure.CitizenWalletRepository;
+import io.github.opencivilizationplatform.saga.SagaExecutionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,17 +32,20 @@ public class CivilizationService {
     private final RuleRepository ruleRepository;
     private final CitizenRepository citizenRepository;
     private final CitizenWalletRepository citizenWalletRepository;
+    private final SagaExecutionRepository sagaExecutionRepository;
 
     public CivilizationService(CivilizationRepository repository,
                                EventBus eventBus,
                                RuleRepository ruleRepository,
                                CitizenRepository citizenRepository,
-                               CitizenWalletRepository citizenWalletRepository) {
+                               CitizenWalletRepository citizenWalletRepository,
+                               SagaExecutionRepository sagaExecutionRepository) {
         this.repository = repository;
         this.eventBus = eventBus;
         this.ruleRepository = ruleRepository;
         this.citizenRepository = citizenRepository;
         this.citizenWalletRepository = citizenWalletRepository;
+        this.sagaExecutionRepository = sagaExecutionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +71,8 @@ public class CivilizationService {
     @Transactional
     public Civilization createCivilization(UUID sagaId, String name, CivilizationScale scale, String region, String ownerToken) {
         if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        sagaExecutionRepository.lockForEffect(sagaId).orElseThrow(() ->
+            new IllegalArgumentException("Saga does not exist: " + sagaId));
         Optional<Civilization> existing = repository.findBySagaId(sagaId);
         if (existing.isPresent()) return existing.get();
         return createCivilizationInternal(sagaId, name, scale, region, ownerToken);

@@ -28,6 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -37,6 +41,10 @@ class FoundCivilizationSagaStepsTest {
     private final UUID sagaId = UUID.randomUUID();
     private final List<Civilization> civilizations = new ArrayList<>();
     private final List<NexusNode> nodes = new ArrayList<>();
+    private CivilizationRepository civilizationsRepo;
+    private NexusNodeRepository nodesRepo;
+    private SagaExecutionRepository sagaRepo;
+    private final ReentrantLock sagaLock = new ReentrantLock();
     private CivilizationService civilizationService;
     private ResourceRegionService regionService;
     private NexusMeshService nexusService;
@@ -45,18 +53,31 @@ class FoundCivilizationSagaStepsTest {
 
     @BeforeEach
     void setUp() {
-        CivilizationRepository civilizationsRepo = mock(CivilizationRepository.class);
+        sagaRepo = mock(SagaExecutionRepository.class);
+        when(sagaRepo.lockForEffect(sagaId)).thenAnswer(call -> {
+            sagaLock.lock();
+            return Optional.of(sagaId);
+        });
+        civilizationsRepo = mock(CivilizationRepository.class);
         when(civilizationsRepo.findBySagaId(any())).thenAnswer(call -> civilizations.stream()
             .filter(c -> call.<UUID>getArgument(0).equals(c.getSagaId())).findFirst());
         when(civilizationsRepo.findById(anyLong())).thenAnswer(call -> civilizations.stream()
             .filter(c -> call.<Long>getArgument(0).equals(c.getId())).findFirst());
         when(civilizationsRepo.save(any())).thenAnswer(call -> {
             Civilization civ = call.getArgument(0);
-            if (civ.getId() == null) { civ.setId((long) civilizations.size() + 1); civilizations.add(civ); }
+            synchronized (civilizations) {
+                if (civ.getId() == null) {
+                    if (civilizations.stream().anyMatch(existing -> sagaId.equals(existing.getSagaId())))
+                        throw new org.springframework.dao.DataIntegrityViolationException("duplicate saga_id");
+                    civ.setId((long) civilizations.size() + 1);
+                    civilizations.add(civ);
+                }
+            }
+            if (sagaLock.isHeldByCurrentThread()) sagaLock.unlock();
             return civ;
         });
         civilizationService = spy(new CivilizationService(civilizationsRepo, mock(EventBus.class),
-            mock(RuleRepository.class), mock(CitizenRepository.class), mock(CitizenWalletRepository.class)));
+            mock(RuleRepository.class), mock(CitizenRepository.class), mock(CitizenWalletRepository.class), sagaRepo));
         doAnswer(call -> civilizations.stream().filter(c -> c.getId().equals(call.<Long>getArgument(0))).findFirst().orElseThrow())
             .when(civilizationService).joinAsAgent(anyLong(), anyString());
 
@@ -70,7 +91,7 @@ class FoundCivilizationSagaStepsTest {
         when(regionsRepo.save(any())).thenAnswer(call -> call.getArgument(0));
         regionService = new ResourceRegionService(regionsRepo);
 
-        NexusNodeRepository nodesRepo = mock(NexusNodeRepository.class);
+        nodesRepo = mock(NexusNodeRepository.class);
         when(nodesRepo.findBySagaId(any())).thenAnswer(call -> nodes.stream()
             .filter(n -> call.<UUID>getArgument(0).equals(n.getSagaId())).findFirst());
         when(nodesRepo.findById(anyLong())).thenAnswer(call -> nodes.stream()
@@ -80,11 +101,19 @@ class FoundCivilizationSagaStepsTest {
         when(nodesRepo.findAll()).thenAnswer(call -> new ArrayList<>(nodes));
         when(nodesRepo.save(any())).thenAnswer(call -> {
             NexusNode node = call.getArgument(0);
-            if (node.getId() == null) { node.setId((long) nodes.size() + 1); nodes.add(node); }
+            synchronized (nodes) {
+                if (node.getId() == null) {
+                    if (nodes.stream().anyMatch(existing -> sagaId.equals(existing.getSagaId())))
+                        throw new org.springframework.dao.DataIntegrityViolationException("duplicate saga_id");
+                    node.setId((long) nodes.size() + 1);
+                    nodes.add(node);
+                }
+            }
+            if (sagaLock.isHeldByCurrentThread()) sagaLock.unlock();
             return node;
         });
         nexusService = new NexusMeshService(nodesRepo, mock(NexusMessageRepository.class),
-            mock(NexusConnectionRepository.class), mock(EventBus.class), mock(StringRedisTemplate.class), mock(ObjectMapper.class));
+            mock(NexusConnectionRepository.class), mock(EventBus.class), mock(StringRedisTemplate.class), mock(ObjectMapper.class), sagaRepo);
         steps = new FoundCivilizationSagaSteps(civilizationService, regionService, nexusService);
     }
 
@@ -105,6 +134,24 @@ class FoundCivilizationSagaStepsTest {
         FoundCivilizationContext replay = context();
         steps.createCivilization().execute(replay);
         assertEquals(first.getCivilization().getId(), replay.getCivilization().getId());
+        assertEquals(1, civilizations.size());
+    }
+
+    @Test
+    void concurrentCreateReturnsSameCivilizationAfterUniqueRace() {
+        CountDownLatch secondLookup = new CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger lookups = new java.util.concurrent.atomic.AtomicInteger();
+        when(civilizationsRepo.findBySagaId(sagaId)).thenAnswer(call -> {
+            Optional<Civilization> seen = civilizations.stream().findFirst();
+            if (lookups.incrementAndGet() == 1) secondLookup.await(200, TimeUnit.MILLISECONDS);
+            else secondLookup.countDown();
+            return seen;
+        });
+        CompletableFuture<Civilization> first = CompletableFuture.supplyAsync(() ->
+            civilizationService.createCivilization(sagaId, "Aurora", CivilizationScale.LOCAL, "Valley", "owner"));
+        CompletableFuture<Civilization> second = CompletableFuture.supplyAsync(() ->
+            civilizationService.createCivilization(sagaId, "Aurora", CivilizationScale.LOCAL, "Valley", "owner"));
+        assertEquals(first.join().getId(), second.join().getId());
         assertEquals(1, civilizations.size());
     }
 
@@ -137,6 +184,24 @@ class FoundCivilizationSagaStepsTest {
         steps.deployNexusNode().execute(ctx);
         assertEquals(1, nodes.size());
         assertEquals(sagaId, nodes.getFirst().getSagaId());
+    }
+
+    @Test
+    void concurrentNodeDeploymentReturnsSameNodeAfterUniqueRace() {
+        CountDownLatch secondLookup = new CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger lookups = new java.util.concurrent.atomic.AtomicInteger();
+        when(nodesRepo.findBySagaId(sagaId)).thenAnswer(call -> {
+            Optional<NexusNode> seen = nodes.stream().findFirst();
+            if (lookups.incrementAndGet() == 1) secondLookup.await(200, TimeUnit.MILLISECONDS);
+            else secondLookup.countDown();
+            return seen;
+        });
+        CompletableFuture<NexusNode> first = CompletableFuture.supplyAsync(() ->
+            nexusService.deployNexusNode(sagaId, "Aurora-Primary", NexusNodeType.PRIMARY, "Valley", 1L, "knowledge"));
+        CompletableFuture<NexusNode> second = CompletableFuture.supplyAsync(() ->
+            nexusService.deployNexusNode(sagaId, "Aurora-Primary", NexusNodeType.PRIMARY, "Valley", 1L, "knowledge"));
+        assertEquals(first.join().getId(), second.join().getId());
+        assertEquals(1, nodes.size());
     }
 
     @Test

@@ -40,6 +40,7 @@ class FoundCivilizationSagaWorkerTest {
     @Autowired TransactionTemplate transactions;
     @MockitoBean FoundCivilizationSagaSteps productionSteps;
     @MockitoBean(name = "container") RedisMessageListenerContainer redisListener;
+    @MockitoBean org.springframework.scheduling.TaskScheduler taskScheduler;
     private MutableClock clock;
     private FoundCivilizationSagaWorker worker;
     private final List<SagaStatusResponse> published = new ArrayList<>();

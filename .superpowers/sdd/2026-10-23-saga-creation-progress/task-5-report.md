@@ -54,3 +54,5 @@ As instructed by sandbox rules, requested an escalated rerun after observing the
 - Actual Redis/network cross-instance transport was not verified in this environment because the existing Redis integration test could not initialize Docker. The focused test verifies the complete produced Redis message through a separate subscriber instance and local owner-filtered handler, but is not a live Redis integration test.
 - Pub/Sub may drop progress events. GET reconciliation remains necessary by design. A slow socket or Redis operation can delay notification; this task adds no queue, timeout policy, replay service, or general workflow abstraction.
 - No push, PR, merge, unrelated source edits, or subagents were used.
+
+Coordinator clarification: the cancellation above followed the coordinator interrupting the silent agent; the tool's aborted-by-user label does not establish an explicit human rejection. No retry command ran. The later instruction to avoid duplicate broad/Docker builds remains in effect.

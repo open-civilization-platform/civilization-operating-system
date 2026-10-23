@@ -19,6 +19,7 @@ class FoundCivilizationSagaServiceTest {
     @Autowired FoundCivilizationSagaService service;
     @Autowired SagaExecutionRepository executions;
     @MockitoBean(name = "container") RedisMessageListenerContainer redisListener;
+    @MockitoBean org.springframework.scheduling.TaskScheduler taskScheduler;
 
     @BeforeEach void clear() { executions.deleteAll(); }
 

@@ -40,6 +40,7 @@ class SagaProgressRedisSubscriberTest {
     @MockitoBean StringRedisTemplate redis;
     @MockitoBean FoundCivilizationSagaSteps steps;
     @MockitoBean(name = "container") RedisMessageListenerContainer listener;
+    @MockitoBean org.springframework.scheduling.TaskScheduler taskScheduler;
     private RedisSagaProgressPublisher publisher;
     private final List<String> published = new ArrayList<>();
 

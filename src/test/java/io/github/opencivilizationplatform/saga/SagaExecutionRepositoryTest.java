@@ -28,6 +28,7 @@ class SagaExecutionRepositoryTest {
     @Autowired EntityManager entityManager;
     @Autowired TransactionTemplate transactions;
     @MockitoBean(name = "container") RedisMessageListenerContainer redisListener;
+    @MockitoBean org.springframework.scheduling.TaskScheduler taskScheduler;
 
     @BeforeEach
     void clearExecutions() { executions.deleteAll(); }

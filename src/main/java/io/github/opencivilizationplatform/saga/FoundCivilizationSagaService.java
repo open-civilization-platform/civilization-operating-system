@@ -26,6 +26,9 @@ public class FoundCivilizationSagaService {
             || idempotencyKey.isBlank() || request.name() == null || request.name().isBlank()
             || request.regionId() == null) throw new IllegalArgumentException("Missing saga submission field");
         String name = request.name().trim();
+        if (name.length() > 255 || idempotencyKey.length() > 255) {
+            throw new IllegalArgumentException("Saga name and idempotency key must be at most 255 characters");
+        }
         CivilizationScale scale = request.scale() == null ? CivilizationScale.LOCAL : request.scale();
         String fingerprint = fingerprint(name, scale, request.regionId());
         try {

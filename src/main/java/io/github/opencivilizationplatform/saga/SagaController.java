@@ -43,5 +43,3 @@ public class SagaController {
         );
     }
 }
-
-record FoundCivilizationRequest(String name, CivilizationScale scale, Long regionId) {}

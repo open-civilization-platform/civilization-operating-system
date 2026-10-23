@@ -12,6 +12,10 @@ public class SagaOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(SagaOrchestrator.class);
 
+    static List<SagaStep<FoundCivilizationContext>> foundCivilizationSteps(FoundCivilizationSagaSteps steps) {
+        return List.of(steps.createCivilization(), steps.claimRegion(), steps.deployNexusNode());
+    }
+
     public <T> void execute(String sagaName, T context, List<SagaStep<T>> steps) {
         List<SagaStep<T>> executed = new ArrayList<>();
         log.info("SAGA [{}] starting with {} steps", sagaName, steps.size());

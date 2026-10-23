@@ -112,3 +112,13 @@ debezium/   CDC connector setup
 ## License
 
 MIT
+
+### Full-stack smoke test
+
+Pull requests run the same disposable Compose smoke test available locally. It requires Docker with the Compose v2 plugin, Bash, curl, and Node.js 24 or newer (for the built-in WebSocket client). On Windows, run it from WSL or Git Bash; native PowerShell is not supported.
+
+```bash
+bash scripts/smoke-test.sh
+```
+
+The runner rejects existing fixed-name CivOS containers and volumes for the generated project before starting, then removes only its Compose project and volume. On failure, it saves service logs to `artifacts/smoke-test/compose.log`. Set `APP_BASE_URL`, `WORKER_BASE_URL`, `FRONTEND_BASE_URL`, `CONNECT_BASE_URL`, `READINESS_TIMEOUT_SECONDS`, or `SMOKE_TEST_PROJECT` to override local defaults; `SMOKE_TEST_PROJECT` is a prefix, and each run adds a unique suffix. This check verifies Debezium connector registration; issue #13 covers CDC event delivery.

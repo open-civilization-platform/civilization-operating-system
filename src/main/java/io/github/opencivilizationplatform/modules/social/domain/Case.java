@@ -32,6 +32,8 @@ public class Case {
     private String monitoringPlan;
 
     @ElementCollection
+    @CollectionTable(name = "social_cases_panel_expert_ids", joinColumns = @JoinColumn(name = "social_cases_id"))
+    @Column(name = "panel_expert_ids")
     private List<String> panelExpertIds;
 
     @Column(name = "updated_at")

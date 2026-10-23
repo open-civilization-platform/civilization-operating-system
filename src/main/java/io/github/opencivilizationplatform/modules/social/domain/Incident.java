@@ -38,6 +38,8 @@ public class Incident {
     private IncidentStatus status;
 
     @ElementCollection
+    @CollectionTable(name = "social_incidents_participant_ids", joinColumns = @JoinColumn(name = "social_incidents_id"))
+    @Column(name = "participant_ids")
     private List<String> participantIds;
 
     @Column(name = "reported_at")

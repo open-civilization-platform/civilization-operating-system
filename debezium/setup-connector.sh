@@ -1,16 +1,15 @@
-#!/bin/bash
-# Register the Debezium PostgreSQL connector
-# Usage: ./debezium/setup-connector.sh [debezium-host]
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-HOST=${1:-localhost}
-CONNECTOR_URL="http://$HOST:8083/connectors"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+HOST="${1:-localhost}"
+CONNECTOR_URL="${CONNECT_BASE_URL:-http://${HOST}:8083/connectors}"
 
-echo "Registering Debezium PostgreSQL connector at $CONNECTOR_URL..."
-
-curl -X POST "$CONNECTOR_URL" \
-  -H "Content-Type: application/json" \
-  -d @debezium/connector.json
-
-echo ""
-echo "Connector status:"
-curl -s "$CONNECTOR_URL/civos-postgres-connector/status" | python3 -m json.tool
+printf 'Registering Debezium PostgreSQL connector at %s...\n' "$CONNECTOR_URL"
+curl --fail --silent --show-error --request POST "$CONNECTOR_URL" \
+  --header 'Content-Type: application/json' \
+  --data-binary "@$REPO_ROOT/debezium/connector.json"
+printf '\nConnector status:\n'
+curl --fail --silent --show-error "$CONNECTOR_URL/civos-postgres-connector/status"
+printf '\n'

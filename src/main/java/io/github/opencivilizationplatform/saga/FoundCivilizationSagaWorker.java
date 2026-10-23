@@ -86,9 +86,7 @@ public class FoundCivilizationSagaWorker {
             }
             markPotentiallyApplied(claim, i);
             try {
-                assertOwned(claim);
-                effects.get(i).execute(context);
-                markSucceeded(claim, i, context);
+                executeEffect(claim, i, context, effects.get(i));
             } catch (Exception failure) {
                 if (failure instanceof LostLease lost) throw lost;
                 boolean transientFailure = transientFailure(failure);
@@ -122,15 +120,26 @@ public class FoundCivilizationSagaWorker {
         });
     }
 
-    private void markSucceeded(Claim claim, int index, FoundCivilizationContext context) {
-        change(claim, saga -> {
+    private void executeEffect(Claim claim, int index, FoundCivilizationContext context,
+                               SagaStep<FoundCivilizationContext> effect) {
+        Progress committed = transactions.execute(ignored -> {
+            lockAndRequireClaim(claim);
+            effect.execute(context);
+            SagaExecution current = executions.findById(claim.id()).orElseThrow();
+            requireClaim(current, claim);
+            executions.incrementSequence(claim.id());
+            SagaExecution saga = executions.findById(claim.id()).orElseThrow();
             SagaStepExecution step = saga.getSteps().get(index);
             step.setStatus(SagaStepStatus.SUCCEEDED);
             step.setLastErrorCode(null);
             step.setLastErrorMessage(null);
             step.setUpdatedAt(clock.instant());
             if (context.getCivilizationId() != null) saga.setCivilizationId(context.getCivilizationId());
+            saga.setUpdatedAt(clock.instant());
+            executions.saveAndFlush(saga);
+            return new Progress(saga.getOwnerId(), SagaStatusResponse.from(saga));
         });
+        publish(committed);
     }
 
     private void scheduleRetry(Claim claim, int index, Exception failure) {
@@ -201,13 +210,7 @@ public class FoundCivilizationSagaWorker {
                 current.setUpdatedAt(clock.instant());
             });
             try {
-                assertOwned(claim);
-                effects.get(i).compensate(context);
-                change(claim, saga -> {
-                    SagaStepExecution current = saga.getSteps().get(index);
-                    current.setCompensationStatus(SagaStepStatus.COMPENSATED);
-                    current.setUpdatedAt(clock.instant());
-                });
+                compensateEffect(claim, index, context, effects.get(i));
             } catch (Exception failure) {
                 if (failure instanceof LostLease lost) throw lost;
                 change(claim, saga -> {
@@ -232,18 +235,33 @@ public class FoundCivilizationSagaWorker {
         return transactions.execute(ignored -> executions.findById(id).orElseThrow());
     }
 
-    private void assertOwned(Claim claim) {
-        transactions.executeWithoutResult(ignored -> {
-            executions.lockForEffect(claim.id()).orElseThrow();
-            requireClaim(executions.findById(claim.id()).orElseThrow(), claim);
+    private void compensateEffect(Claim claim, int index, FoundCivilizationContext context,
+                                  SagaStep<FoundCivilizationContext> effect) {
+        Progress committed = transactions.execute(ignored -> {
+            lockAndRequireClaim(claim);
+            effect.compensate(context);
+            SagaExecution current = executions.findById(claim.id()).orElseThrow();
+            requireClaim(current, claim);
+            executions.incrementSequence(claim.id());
+            SagaExecution saga = executions.findById(claim.id()).orElseThrow();
+            SagaStepExecution step = saga.getSteps().get(index);
+            step.setCompensationStatus(SagaStepStatus.COMPENSATED);
+            step.setUpdatedAt(clock.instant());
+            saga.setUpdatedAt(clock.instant());
+            executions.saveAndFlush(saga);
+            return new Progress(saga.getOwnerId(), SagaStatusResponse.from(saga));
         });
+        publish(committed);
+    }
+
+    private void lockAndRequireClaim(Claim claim) {
+        executions.lockForEffect(claim.id()).orElseThrow();
+        requireClaim(executions.findById(claim.id()).orElseThrow(), claim);
     }
 
     private void change(Claim claim, java.util.function.Consumer<SagaExecution> update) {
         Progress committed = transactions.execute(ignored -> {
-            executions.lockForEffect(claim.id()).orElseThrow();
-            SagaExecution current = executions.findById(claim.id()).orElseThrow();
-            requireClaim(current, claim);
+            lockAndRequireClaim(claim);
             executions.incrementSequence(claim.id());
             SagaExecution saga = executions.findById(claim.id()).orElseThrow();
             update.accept(saga);
@@ -251,6 +269,10 @@ public class FoundCivilizationSagaWorker {
             executions.saveAndFlush(saga);
             return new Progress(saga.getOwnerId(), SagaStatusResponse.from(saga));
         });
+        publish(committed);
+    }
+
+    private void publish(Progress committed) {
         SagaStatusResponse snapshot = committed.snapshot();
         SagaCompensationView compensation = snapshot.steps().stream()
             .filter(step -> step.key().equals(snapshot.currentStep()))

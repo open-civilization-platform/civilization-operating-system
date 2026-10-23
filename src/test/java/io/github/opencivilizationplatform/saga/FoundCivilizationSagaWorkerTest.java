@@ -24,8 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -151,6 +154,19 @@ class FoundCivilizationSagaWorkerTest {
         assertEquals("DOMAIN", first(id).getLastErrorCode());
     }
 
+    @Test void failedEffectRollsBackItsDatabaseMutationBeforeCompensation() {
+        UUID id = pending();
+        installSteps(ctx -> {
+            executions.findById(ctx.getSagaId()).orElseThrow().setCivilizationId(99L);
+            executions.flush();
+            throw new IllegalStateException("partial effect");
+        }, null, null);
+        assertTrue(worker.processNextDue());
+        assertNull(reload(id).getCivilizationId());
+        assertEquals(SagaStatus.COMPENSATED, reload(id).getStatus());
+        assertTrue(actions.contains("compensate-0"));
+    }
+
     @Test void retriesWrappedSocketConnectivityFailures() {
         UUID socketId = pending();
         installSteps(ctx -> { throw new RuntimeException(new SocketException("reset")); }, null, null);
@@ -160,26 +176,6 @@ class FoundCivilizationSagaWorkerTest {
         installSteps(ctx -> { throw new RuntimeException(new NoRouteToHostException("unreachable")); }, null, null);
         assertTrue(worker.processNextDue());
         assertEquals("TRANSIENT", first(routeId).getLastErrorCode());
-    }
-
-    @Test void staleLeaseHolderCannotWriteOrCompensateAfterReclaim() {
-        UUID id = pending();
-        AtomicInteger invocations = new AtomicInteger();
-        AtomicLong sequenceAfterReclaim = new AtomicLong();
-        FoundCivilizationSagaWorker recovering = new FoundCivilizationSagaWorker(executions, transactions,
-            productionSteps, (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {}, clock);
-        installSteps(ctx -> {
-            if (invocations.incrementAndGet() == 1) {
-                clock.advance(Duration.ofMinutes(5).plusSeconds(1));
-                assertTrue(recovering.processNextDue());
-                sequenceAfterReclaim.set(reload(id).getSequence());
-            }
-        }, null, null);
-        assertTrue(worker.processNextDue());
-        assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
-        assertEquals(sequenceAfterReclaim.get(), reload(id).getSequence());
-        assertEquals(2, invocations.get());
-        assertTrue(actions.stream().noneMatch(action -> action.startsWith("compensate-")));
     }
 
     @Test void staleLeaseHolderDoesNotStartEffectAfterReclaim() {
@@ -199,6 +195,85 @@ class FoundCivilizationSagaWorkerTest {
         assertTrue(worker.processNextDue());
         assertEquals(1, executionsOfFirstStep.get());
         assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
+    }
+
+    @Test void reclaimCannotInterleaveWithExecutingEffect() throws Exception {
+        UUID id = pending();
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger inEffect = new AtomicInteger();
+        AtomicInteger peakConcurrency = new AtomicInteger();
+        List<SagaStatusResponse> firstWorkerEvents = new java.util.concurrent.CopyOnWriteArrayList<>();
+        installSteps(ctx -> {
+            int active = inEffect.incrementAndGet();
+            peakConcurrency.accumulateAndGet(active, Math::max);
+            entered.countDown();
+            if (active == 1 && release.getCount() > 0) await(release);
+            inEffect.decrementAndGet();
+        }, null, null);
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> firstWorkerEvents.add(snapshot), clock);
+        FoundCivilizationSagaWorker recovering = new FoundCivilizationSagaWorker(executions, transactions,
+            productionSteps, (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {}, clock);
+        CompletableFuture<Boolean> first = CompletableFuture.supplyAsync(worker::processNextDue);
+        assertTrue(entered.await(10, TimeUnit.SECONDS));
+        clock.advance(Duration.ofMinutes(5).plusSeconds(1));
+        CompletableFuture<Boolean> second = CompletableFuture.supplyAsync(recovering::processNextDue);
+        try {
+            assertThrows(TimeoutException.class, () -> second.get(250, TimeUnit.MILLISECONDS));
+            assertEquals(1, peakConcurrency.get());
+        } finally { release.countDown(); }
+        assertTrue(first.get(10, TimeUnit.SECONDS));
+        assertTrue(second.get(10, TimeUnit.SECONDS));
+        assertEquals(1, peakConcurrency.get());
+        assertTrue(firstWorkerEvents.stream().noneMatch(event -> event.status() == SagaStatus.SUCCEEDED));
+        assertEquals(SagaStatus.SUCCEEDED, reload(id).getStatus());
+    }
+
+    @Test void reclaimCannotInterleaveWithCompensation() throws Exception {
+        UUID id = pending();
+        transactions.executeWithoutResult(ignored -> {
+            SagaExecution saga = reload(id);
+            saga.setStatus(SagaStatus.COMPENSATING);
+            saga.getSteps().get(0).setStatus(SagaStepStatus.POTENTIALLY_APPLIED);
+            saga.getSteps().get(0).setExecutionAttempts(1);
+        });
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger inCompensation = new AtomicInteger();
+        AtomicInteger peakConcurrency = new AtomicInteger();
+        List<SagaStatusResponse> firstWorkerEvents = new java.util.concurrent.CopyOnWriteArrayList<>();
+        when(productionSteps.createCivilization()).thenReturn(step(0, null, ctx -> {
+            int active = inCompensation.incrementAndGet();
+            peakConcurrency.accumulateAndGet(active, Math::max);
+            entered.countDown();
+            if (active == 1 && release.getCount() > 0) await(release);
+            inCompensation.decrementAndGet();
+        }));
+        worker = new FoundCivilizationSagaWorker(executions, transactions, productionSteps,
+            (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> firstWorkerEvents.add(snapshot), clock);
+        FoundCivilizationSagaWorker recovering = new FoundCivilizationSagaWorker(executions, transactions,
+            productionSteps, (ownerId, sagaId, snapshot, currentStep, failure, compensation) -> {}, clock);
+        CompletableFuture<Boolean> first = CompletableFuture.supplyAsync(worker::processNextDue);
+        assertTrue(entered.await(10, TimeUnit.SECONDS));
+        clock.advance(Duration.ofMinutes(5).plusSeconds(1));
+        CompletableFuture<Boolean> second = CompletableFuture.supplyAsync(recovering::processNextDue);
+        try {
+            assertThrows(TimeoutException.class, () -> second.get(250, TimeUnit.MILLISECONDS));
+            assertEquals(1, peakConcurrency.get());
+        } finally { release.countDown(); }
+        assertTrue(first.get(10, TimeUnit.SECONDS));
+        assertTrue(second.get(10, TimeUnit.SECONDS));
+        assertEquals(1, peakConcurrency.get());
+        assertTrue(firstWorkerEvents.stream().noneMatch(event -> event.status() == SagaStatus.COMPENSATED));
+        assertEquals(SagaStatus.COMPENSATED, reload(id).getStatus());
+    }
+
+    private static void await(CountDownLatch latch) {
+        try { latch.await(); } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 
     @Test void failsWithoutCompensationWhenNoEffectWasApplied() {
@@ -281,7 +356,7 @@ class FoundCivilizationSagaWorkerTest {
     }
 
     private static final class MutableClock extends Clock {
-        private Instant now = Instant.parse("2026-10-23T12:00:00Z");
+        private volatile Instant now = Instant.parse("2026-10-23T12:00:00Z");
         public ZoneId getZone() { return ZoneId.of("UTC"); }
         public Clock withZone(ZoneId zone) { return this; }
         public Instant instant() { return now; }

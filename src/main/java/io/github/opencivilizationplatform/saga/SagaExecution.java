@@ -55,6 +55,10 @@ public class SagaExecution {
     @Column(nullable = false)
     private long sequence;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     @Column(name = "lease_until")
     private Instant leaseUntil;
 
@@ -109,7 +113,6 @@ public class SagaExecution {
     public String getFailureMessage() { return failureMessage; }
     public void setFailureMessage(String failureMessage) { this.failureMessage = failureMessage; }
     public long getSequence() { return sequence; }
-    public void setSequence(long sequence) { this.sequence = sequence; }
     public Instant getLeaseUntil() { return leaseUntil; }
     public void setLeaseUntil(Instant leaseUntil) { this.leaseUntil = leaseUntil; }
     public Instant getHeartbeatAt() { return heartbeatAt; }

@@ -13,6 +13,7 @@ CREATE TABLE saga_executions (
     failure_code VARCHAR(80),
     failure_message VARCHAR(1000),
     sequence BIGINT NOT NULL DEFAULT 0 CHECK (sequence >= 0),
+    version BIGINT NOT NULL DEFAULT 0,
     lease_until TIMESTAMP WITH TIME ZONE,
     heartbeat_at TIMESTAMP WITH TIME ZONE,
     next_attempt_at TIMESTAMP WITH TIME ZONE,

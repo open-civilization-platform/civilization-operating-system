@@ -24,9 +24,9 @@ public interface SagaExecutionRepository extends JpaRepository<SagaExecution, UU
         + "and (e.nextAttemptAt is null or e.nextAttemptAt <= :now) order by e.createdAt, e.id")
     List<UUID> findDueIds(@Param("now") Instant now);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
-    @Query("update SagaExecution e set e.leaseUntil = :leaseUntil, e.heartbeatAt = :now "
+    @Query("update SagaExecution e set e.leaseUntil = :leaseUntil, e.heartbeatAt = :now, e.version = e.version + 1 "
         + "where e.id = :id and e.status in "
         + "(io.github.opencivilizationplatform.saga.SagaStatus.PENDING, "
         + "io.github.opencivilizationplatform.saga.SagaStatus.RUNNING, "
@@ -35,6 +35,11 @@ public interface SagaExecutionRepository extends JpaRepository<SagaExecution, UU
         + "and (e.nextAttemptAt is null or e.nextAttemptAt <= :now)")
     int claimIfDue(@Param("id") UUID id, @Param("now") Instant now,
                    @Param("leaseUntil") Instant leaseUntil);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Transactional
+    @Query("update SagaExecution e set e.sequence = e.sequence + 1, e.version = e.version + 1 where e.id = :id")
+    int incrementSequence(@Param("id") UUID id);
 
     default Optional<SagaExecution> claimNextDue(Instant now, Duration lease) {
         if (lease.isNegative() || lease.isZero()) throw new IllegalArgumentException("lease must be positive");

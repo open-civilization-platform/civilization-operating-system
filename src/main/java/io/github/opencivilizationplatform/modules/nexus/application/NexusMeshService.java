@@ -55,7 +55,21 @@ public class NexusMeshService {
     @Transactional
     public NexusNode registerNode(String name, NexusNodeType type, String region,
                                     Long civilizationId, String knowledgeBase) {
+        return registerNodeInternal(null, name, type, region, civilizationId, knowledgeBase);
+    }
+
+    @Transactional
+    public NexusNode deployNexusNode(UUID sagaId, String name, NexusNodeType type, String region,
+                                     Long civilizationId, String knowledgeBase) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        return nodeRepository.findBySagaId(sagaId).orElseGet(() ->
+            registerNodeInternal(sagaId, name, type, region, civilizationId, knowledgeBase));
+    }
+
+    private NexusNode registerNodeInternal(UUID sagaId, String name, NexusNodeType type, String region,
+                                            Long civilizationId, String knowledgeBase) {
         NexusNode node = new NexusNode();
+        node.setSagaId(sagaId);
         node.setName(name);
         node.setType(type);
         node.setRegion(region);
@@ -72,6 +86,23 @@ public class NexusMeshService {
         connectToNeighbors(node);
 
         return node;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<NexusNode> findNodeBySagaId(UUID sagaId) {
+        return nodeRepository.findBySagaId(sagaId);
+    }
+
+    @Transactional
+    public void compensateNodeDeployment(UUID sagaId) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        nodeRepository.findBySagaId(sagaId).ifPresent(node -> {
+            if (node.getStatus() != NexusNodeStatus.OFFLINE) {
+                node.setStatus(NexusNodeStatus.OFFLINE);
+                node.setLastActiveAt(LocalDateTime.now());
+                nodeRepository.save(node);
+            }
+        });
     }
 
     @Transactional

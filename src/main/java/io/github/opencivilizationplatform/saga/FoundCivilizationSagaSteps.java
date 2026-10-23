@@ -2,11 +2,9 @@ package io.github.opencivilizationplatform.saga;
 
 import io.github.opencivilizationplatform.modules.civilization.application.CivilizationService;
 import io.github.opencivilizationplatform.modules.civilization.domain.Civilization;
-import io.github.opencivilizationplatform.modules.civilization.domain.CivilizationStatus;
 import io.github.opencivilizationplatform.modules.region.application.ResourceRegionService;
 import io.github.opencivilizationplatform.modules.nexus.application.NexusMeshService;
 import io.github.opencivilizationplatform.modules.nexus.domain.NexusNodeType;
-import io.github.opencivilizationplatform.modules.nexus.domain.NexusNodeStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,7 +30,7 @@ public class FoundCivilizationSagaSteps {
             @Override
             public void execute(FoundCivilizationContext ctx) {
                 Civilization civ = civilizationService.createCivilization(
-                    ctx.getName(), ctx.getScale(),
+                    ctx.getSagaId(), ctx.getName(), ctx.getScale(),
                     regionService.getRegion(ctx.getRegionId()).getName(),
                     ctx.getOwnerToken()
                 );
@@ -42,10 +40,9 @@ public class FoundCivilizationSagaSteps {
 
             @Override
             public void compensate(FoundCivilizationContext ctx) {
-                if (ctx.getCivilization() != null && ctx.getCivilization().getId() != null) {
-                    civilizationService.updateStatus(ctx.getCivilization().getId(), CivilizationStatus.FALLEN);
-                    log.warn("SAGA compensate: civilization {} marked as FALLEN", ctx.getCivilization().getId());
-                }
+                civilizationService.findBySagaId(ctx.getSagaId()).ifPresent(ctx::setCivilization);
+                civilizationService.compensateCreation(ctx.getSagaId());
+                log.warn("SAGA compensate: civilization for saga {} marked as FALLEN if present", ctx.getSagaId());
             }
 
             @Override
@@ -57,17 +54,17 @@ public class FoundCivilizationSagaSteps {
         return new SagaStep<>() {
             @Override
             public void execute(FoundCivilizationContext ctx) {
-                regionService.claimRegion(ctx.getRegionId(), ctx.getCivilization().getId());
+                Civilization civ = resolveCivilization(ctx);
+                regionService.claimRegion(ctx.getSagaId(), ctx.getRegionId(), civ.getId());
                 ctx.setRegionClaimed(true);
                 log.info("SAGA step: region {} claimed for civilization {}", ctx.getRegionId(), ctx.getCivilization().getId());
             }
 
             @Override
             public void compensate(FoundCivilizationContext ctx) {
-                if (ctx.isRegionClaimed()) {
-                    regionService.unclaimRegion(ctx.getRegionId());
-                    log.warn("SAGA compensate: region {} unclaimed", ctx.getRegionId());
-                }
+                Long civilizationId = resolveCivilizationId(ctx);
+                regionService.compensateClaim(ctx.getSagaId(), ctx.getRegionId(), civilizationId);
+                log.warn("SAGA compensate: region {} unclaimed if owned by saga civilization", ctx.getRegionId());
             }
 
             @Override
@@ -80,12 +77,13 @@ public class FoundCivilizationSagaSteps {
             @Override
             public void execute(FoundCivilizationContext ctx) {
                 String regionName = regionService.getRegion(ctx.getRegionId()).getName();
-                nexusService.registerNode(
-                    ctx.getCivilization().getName() + "-Primary",
+                Civilization civ = resolveCivilization(ctx);
+                nexusService.deployNexusNode(
+                    ctx.getSagaId(), civ.getName() + "-Primary",
                     NexusNodeType.PRIMARY,
                     regionName,
-                    ctx.getCivilization().getId(),
-                    "Primary neural node for " + ctx.getCivilization().getName()
+                    civ.getId(),
+                    "Primary neural node for " + civ.getName()
                 );
                 ctx.setNexusNodeDeployed(true);
                 log.info("SAGA step: nexus node deployed for civilization {}", ctx.getCivilization().getId());
@@ -93,17 +91,27 @@ public class FoundCivilizationSagaSteps {
 
             @Override
             public void compensate(FoundCivilizationContext ctx) {
-                if (ctx.isNexusNodeDeployed()) {
-                    var nodes = nexusService.getNodesForCivilization(ctx.getCivilization().getId());
-                    nodes.forEach(node -> {
-                        nexusService.updateNodeStatus(node.getId(), NexusNodeStatus.OFFLINE);
-                    });
-                    log.warn("SAGA compensate: nexus nodes set to OFFLINE for civilization {}", ctx.getCivilization().getId());
-                }
+                nexusService.compensateNodeDeployment(ctx.getSagaId());
+                log.warn("SAGA compensate: saga node set to OFFLINE if present for {}", ctx.getSagaId());
             }
 
             @Override
             public String getName() { return "DeployNexusNode"; }
         };
+    }
+
+    private Civilization resolveCivilization(FoundCivilizationContext ctx) {
+        if (ctx.getCivilization() != null) return ctx.getCivilization();
+        Civilization civ = civilizationService.findBySagaId(ctx.getSagaId()).orElseThrow();
+        ctx.setCivilization(civ);
+        return civ;
+    }
+
+    private Long resolveCivilizationId(FoundCivilizationContext ctx) {
+        if (ctx.getCivilizationId() != null) return ctx.getCivilizationId();
+        return civilizationService.findBySagaId(ctx.getSagaId()).map(civ -> {
+            ctx.setCivilization(civ);
+            return civ.getId();
+        }).orElse(null);
     }
 }

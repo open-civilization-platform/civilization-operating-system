@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "nexus_nodes")
@@ -16,6 +17,9 @@ public class NexusNode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "saga_id", unique = true)
+    private UUID sagaId;
 
     @Column(nullable = false)
     @NotBlank
@@ -53,6 +57,8 @@ public class NexusNode {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public UUID getSagaId() { return sagaId; }
+    public void setSagaId(UUID sagaId) { this.sagaId = sagaId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public Civilization getCivilization() { return civilization; }

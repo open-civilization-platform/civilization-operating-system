@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CivilizationService {
@@ -59,7 +61,20 @@ public class CivilizationService {
 
     @Transactional
     public Civilization createCivilization(String name, CivilizationScale scale, String region, String ownerToken) {
+        return createCivilizationInternal(null, name, scale, region, ownerToken);
+    }
+
+    @Transactional
+    public Civilization createCivilization(UUID sagaId, String name, CivilizationScale scale, String region, String ownerToken) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        Optional<Civilization> existing = repository.findBySagaId(sagaId);
+        if (existing.isPresent()) return existing.get();
+        return createCivilizationInternal(sagaId, name, scale, region, ownerToken);
+    }
+
+    private Civilization createCivilizationInternal(UUID sagaId, String name, CivilizationScale scale, String region, String ownerToken) {
         Civilization civ = new Civilization();
+        civ.setSagaId(sagaId);
         civ.setName(name);
         civ.setScale(scale);
         civ.setRegion(region);
@@ -76,6 +91,23 @@ public class CivilizationService {
         joinAsAgent(savedCiv.getId(), ownerToken);
 
         return savedCiv;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Civilization> findBySagaId(UUID sagaId) {
+        return repository.findBySagaId(sagaId);
+    }
+
+    @Transactional
+    public void compensateCreation(UUID sagaId) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        repository.findBySagaId(sagaId).ifPresent(civ -> {
+            if (civ.getStatus() != CivilizationStatus.FALLEN) {
+                civ.setStatus(CivilizationStatus.FALLEN);
+                civ.setLastActiveAt(LocalDateTime.now());
+                repository.save(civ);
+            }
+        });
     }
 
     @Transactional

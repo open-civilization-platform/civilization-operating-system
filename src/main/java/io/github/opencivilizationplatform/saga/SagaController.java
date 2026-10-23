@@ -1,45 +1,42 @@
 package io.github.opencivilizationplatform.saga;
 
-import io.github.opencivilizationplatform.config.seed.CivilizationScale;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/sagas")
 @Tag(name = "Sagas", description = "Distributed transaction sagas for multi-step operations")
 public class SagaController {
 
-    private final SagaOrchestrator orchestrator;
-    private final FoundCivilizationSagaSteps foundSteps;
+    private final FoundCivilizationSagaService service;
 
-    public SagaController(SagaOrchestrator orchestrator, FoundCivilizationSagaSteps foundSteps) {
-        this.orchestrator = orchestrator;
-        this.foundSteps = foundSteps;
+    public SagaController(FoundCivilizationSagaService service) {
+        this.service = service;
     }
 
     @PostMapping("/found-civilization")
-    @Operation(summary = "Execute FoundCivilization saga (create civ → claim region → deploy nexus)")
-    public Map<String, Object> foundCivilization(@RequestBody FoundCivilizationRequest request) {
-        FoundCivilizationContext ctx = new FoundCivilizationContext();
-        ctx.setName(request.name());
-        ctx.setScale(request.scale() != null ? request.scale() : CivilizationScale.LOCAL);
-        ctx.setRegionId(request.regionId());
-        ctx.setOwnerToken("saga-user");
+    @Operation(summary = "Submit an asynchronous FoundCivilization saga",
+        description = "Returns 202 with durable status (PENDING, RUNNING, COMPENSATING, SUCCEEDED, FAILED, "
+            + "COMPENSATED or COMPENSATION_FAILED). Retains civilizationId and name when available.")
+    public ResponseEntity<SagaStatusResponse> foundCivilization(
+            @RequestBody FoundCivilizationRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            Authentication authentication) {
+        if (request.name() == null || request.name().isBlank() || request.scale() == null
+                || request.regionId() == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Missing saga submission field");
+        }
+        return ResponseEntity.accepted().body(service.submit(request, authentication.getName(), idempotencyKey));
+    }
 
-        orchestrator.execute("FoundCivilization", ctx, List.of(
-            foundSteps.createCivilization(),
-            foundSteps.claimRegion(),
-            foundSteps.deployNexusNode()
-        ));
-
-        return Map.of(
-            "status", "COMPLETED",
-            "civilizationId", ctx.getCivilization().getId(),
-            "name", ctx.getCivilization().getName()
-        );
+    @GetMapping("/{id}")
+    @Operation(summary = "Get the authenticated owner's durable saga status")
+    public SagaStatusResponse getStatus(@PathVariable UUID id, Authentication authentication) {
+        return service.getStatus(id, authentication.getName());
     }
 }

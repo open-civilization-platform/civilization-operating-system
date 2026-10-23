@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.UUID;
 
 public record SagaStatusResponse(UUID sagaId, SagaStatus status, String currentStep,
-                                 String failedStep, Long civilizationId, SagaFailureView failure,
+                                 String failedStep, Long civilizationId, String name, SagaFailureView failure,
                                  List<SagaStepView> steps, long sequence,
                                  Instant createdAt, Instant updatedAt) {
     static SagaStatusResponse from(SagaExecution execution) {
         return new SagaStatusResponse(execution.getId(), execution.getStatus(),
             execution.getCurrentStep(), execution.getFailedStep(), execution.getCivilizationId(),
+            execution.getCivilizationName(),
             failure(execution.getFailureCode(), execution.getFailureMessage()),
             execution.getSteps().stream().map(step -> new SagaStepView(step.getStepKey(),
                 step.getStatus(), step.getExecutionAttempts(), step.getNextAttemptAt(),

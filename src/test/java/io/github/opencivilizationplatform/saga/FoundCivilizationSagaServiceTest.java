@@ -26,6 +26,8 @@ class FoundCivilizationSagaServiceTest {
         var first = service.submit(new FoundCivilizationRequest("  New World  ", null, 7L), "owner-a", "key-a");
         var second = service.submit(new FoundCivilizationRequest("New World", CivilizationScale.LOCAL, 7L), "owner-a", "key-a");
         assertEquals(first.sagaId(), second.sagaId());
+        assertEquals("New World", first.name());
+        assertEquals("New World", second.name());
         assertEquals(1, executions.count());
     }
 
@@ -48,6 +50,7 @@ class FoundCivilizationSagaServiceTest {
     @Test void statusIsOwnerScoped() {
         UUID id = service.submit(new FoundCivilizationRequest("New World", CivilizationScale.LOCAL, 7L), "owner-a", "key-a").sagaId();
         assertEquals(id, service.getStatus(id, "owner-a").sagaId());
+        assertEquals("New World", service.getStatus(id, "owner-a").name());
         assertThrows(SagaException.class, () -> service.getStatus(id, "owner-b"));
         assertThrows(SagaException.class, () -> service.getStatus(UUID.randomUUID(), "owner-a"));
     }

@@ -33,6 +33,8 @@ public class Project {
     private ImpactArea impactArea;
 
     @ElementCollection
+    @CollectionTable(name = "contribution_projects_required_skill_names", joinColumns = @JoinColumn(name = "contribution_projects_id"))
+    @Column(name = "required_skill_names")
     private List<String> requiredSkillNames;
 
     @Column(nullable = false)

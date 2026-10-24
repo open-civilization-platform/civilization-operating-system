@@ -31,7 +31,7 @@ public class AutomationUnit {
     @NotNull
     private AutomationUnitStatus status;
 
-    @Column(nullable = false)
+    @Column(name = "current_task", nullable = false)
     @NotBlank
     private String currentTask;
 

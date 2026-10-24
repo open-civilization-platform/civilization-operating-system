@@ -151,8 +151,8 @@
 			<artifactId>spring-boot-starter-graphql</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-kafka</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
@@ -218,6 +218,21 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			<configuration>
+				<mainClass>io.github.opencivilizationplatform.CivilizationOsApplication</mainClass>
+			</configuration>
+			<executions>
+				<execution>
+					<id>repackage-worker</id>
+					<goals>
+						<goal>repackage</goal>
+					</goals>
+					<configuration>
+						<classifier>worker</classifier>
+						<mainClass>io.github.opencivilizationplatform.worker.CortexWorkerApplication</mainClass>
+					</configuration>
+				</execution>
+			</executions>
 			</plugin>
 		</plugins>
 	</build>

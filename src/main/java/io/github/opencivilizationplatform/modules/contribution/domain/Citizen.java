@@ -41,6 +41,8 @@ public class Citizen {
     private List<Skill> skills;
 
     @ElementCollection
+    @CollectionTable(name = "citizen_interests", joinColumns = @JoinColumn(name = "citizen_id"))
+    @Column(name = "interests")
     private List<String> interests;
 
     private Double reputationScore;

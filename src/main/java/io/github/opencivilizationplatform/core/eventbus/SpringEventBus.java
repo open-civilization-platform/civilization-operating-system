@@ -2,6 +2,7 @@ package io.github.opencivilizationplatform.core.eventbus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 @Component
+@ConditionalOnProperty(name = "civos.eventbus.type", havingValue = "spring", matchIfMissing = true)
 public class SpringEventBus implements EventBus {
 
     private static final Logger log = LoggerFactory.getLogger(SpringEventBus.class);

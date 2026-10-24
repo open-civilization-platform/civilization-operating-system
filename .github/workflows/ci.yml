@@ -8,6 +8,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -146,3 +149,29 @@ jobs:
         run: |
           ./mvnw validate -B -DskipTests
           echo "Lint passed"
+
+  full-stack-smoke:
+    name: Full-stack Compose smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Verify Docker Compose v2
+        run: docker compose version
+
+      - name: Run full-stack smoke test
+        run: bash scripts/smoke-test.sh
+
+      - name: Upload Compose logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-stack-smoke-compose-logs
+          path: artifacts/smoke-test/compose.log
+          if-no-files-found: ignore

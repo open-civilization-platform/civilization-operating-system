@@ -18,9 +18,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(scanBasePackages = {
     "io.github.opencivilizationplatform.worker",
     "io.github.opencivilizationplatform.core.eventbus",
-    "io.github.opencivilizationplatform.modules.cortex",
-    "io.github.opencivilizationplatform.modules.civilization",
-    "io.github.opencivilizationplatform.modules.region"
+    "io.github.opencivilizationplatform.modules.cortex.cortex",
+    "io.github.opencivilizationplatform.modules.civilization.infrastructure",
+    "io.github.opencivilizationplatform.modules.region.infrastructure"
 })
 @Import({
     KafkaConfig.class,

@@ -5,7 +5,10 @@ import io.github.opencivilizationplatform.modules.simulation.application.Simulat
 import io.github.opencivilizationplatform.modules.simulation.api.dto.SimulationStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -19,7 +22,8 @@ public class WorkerCortexController {
     private final CortexEngineService cortexEngine;
     private final SimulationEngineService simulationEngine;
 
-    public WorkerCortexController(CortexEngineService cortexEngine, SimulationEngineService simulationEngine) {
+    public WorkerCortexController(CortexEngineService cortexEngine,
+                                  @Nullable SimulationEngineService simulationEngine) {
         this.cortexEngine = cortexEngine;
         this.simulationEngine = simulationEngine;
     }
@@ -53,6 +57,10 @@ public class WorkerCortexController {
     @GetMapping("/status")
     @Operation(summary = "Worker status and metrics")
     public SimulationStatusResponse status() {
+        if (simulationEngine == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Simulation status is unavailable in the dedicated Cortex worker");
+        }
         return simulationEngine.getStatus();
     }
 }

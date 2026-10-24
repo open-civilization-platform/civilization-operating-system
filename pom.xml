@@ -218,6 +218,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			<configuration>
+				<mainClass>io.github.opencivilizationplatform.CivilizationOsApplication</mainClass>
+			</configuration>
 			<executions>
 				<execution>
 					<id>repackage-worker</id>

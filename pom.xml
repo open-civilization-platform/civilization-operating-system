@@ -218,6 +218,18 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>repackage-worker</id>
+					<goals>
+						<goal>repackage</goal>
+					</goals>
+					<configuration>
+						<classifier>worker</classifier>
+						<mainClass>io.github.opencivilizationplatform.worker.CortexWorkerApplication</mainClass>
+					</configuration>
+				</execution>
+			</executions>
 			</plugin>
 		</plugins>
 	</build>

@@ -6,9 +6,11 @@ import { BarChart3, BarChart, Activity, Users, Trophy, Plus, Wifi, WifiOff, Spar
 import CreateCivilizationForm from '../components/CreateCivilizationForm'
 import { useRealtimeUpdates } from '../hooks/useRealtimeUpdates'
 import Layout from '../components/Layout'
+import type { SagaProgressPayload } from '../api/sagas'
 
 export default function Dashboard() {
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(() => Boolean(sessionStorage.getItem('found-civilization-submission')))
+  const [sagaProgress, setSagaProgress] = useState<SagaProgressPayload>()
   const [wsConnected, setWsConnected] = useState(false)
   const { data: civData, refetch: refetchCivs } = useQuery(GET_CIVILIZATIONS, { variables: { page: 0, size: 5 } })
   const { data: leaderData, refetch: refetchLeader } = useQuery(GET_LEADERBOARD)
@@ -23,6 +25,7 @@ export default function Dashboard() {
     onSimulationTick,
     onCivilizationEvent: useCallback(() => { refetchCivs(); refetchLeader() }, [refetchCivs, refetchLeader]),
     onStatusChange: setWsConnected,
+    onSagaProgress: setSagaProgress,
   })
 
   const civs = civData?.civilizations?.content || []
@@ -61,7 +64,7 @@ export default function Dashboard() {
       }
     >
 
-      {showForm && <CreateCivilizationForm onClose={() => { setShowForm(false); refetchCivs() }} />}
+      {showForm && <CreateCivilizationForm onClose={() => setShowForm(false)} onSucceeded={() => { refetchCivs(); refetchLeader() }} connected={wsConnected} sagaProgress={sagaProgress} />}
 
       <div className="dashboard-grid">
         <div className="stat-card">

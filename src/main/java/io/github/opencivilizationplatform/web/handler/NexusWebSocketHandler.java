@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NexusWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(NexusWebSocketHandler.class);
-    private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, ClientSession> sessions = new ConcurrentHashMap<>();
     private final NexusMeshService meshService;
     private final ObjectMapper objectMapper;
 
@@ -31,7 +31,7 @@ public class NexusWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         String clientId = (String) session.getAttributes().get("X-Client-Id");
-        sessions.put(session.getId(), session);
+        sessions.put(session.getId(), new ClientSession(clientId, session));
         log.info("WebSocket connected: sessionId={}, clientId={}", session.getId(), clientId);
     }
 
@@ -49,7 +49,7 @@ public class NexusWebSocketHandler extends TextWebSocketHandler {
                 meshService.sendMessage(sourceId, targetId, msgType, content);
             }
             case "ping" -> {
-                session.sendMessage(new TextMessage("{\"type\":\"pong\"}"));
+                sendText(session, new TextMessage("{\"type\":\"pong\"}"));
             }
         }
     }
@@ -61,7 +61,29 @@ public class NexusWebSocketHandler extends TextWebSocketHandler {
     }
 
     public int getActiveSessionCount() {
-        return (int) sessions.values().stream().filter(WebSocketSession::isOpen).count();
+        return (int) sessions.values().stream().filter(s -> s.session().isOpen()).count();
+    }
+
+    public void sendToClient(String clientId, String json) {
+        if (clientId == null || clientId.isBlank()) return;
+        TextMessage message = new TextMessage(json);
+        for (ClientSession connected : sessions.values()) {
+            if (!clientId.equals(connected.clientId())) continue;
+            WebSocketSession session = connected.session();
+            try {
+                sendText(session, message);
+            } catch (Exception failureToNotify) {
+                log.warn("Failed to send saga progress to session {}", session.getId(), failureToNotify);
+            }
+        }
+    }
+
+    private record ClientSession(String clientId, WebSocketSession session) {}
+
+    private void sendText(WebSocketSession session, TextMessage message) throws java.io.IOException {
+        synchronized (session) {
+            if (session.isOpen()) session.sendMessage(message);
+        }
     }
 
     public void broadcastMessageLocally(NexusMessage msg) {
@@ -75,10 +97,9 @@ public class NexusWebSocketHandler extends TextWebSocketHandler {
                 "hopCount", msg.getHopCount()
             ));
             TextMessage textMsg = new TextMessage(json);
-            for (WebSocketSession s : sessions.values()) {
-                if (s.isOpen()) {
-                    s.sendMessage(textMsg);
-                }
+            for (ClientSession connected : sessions.values()) {
+                WebSocketSession s = connected.session();
+                sendText(s, textMsg);
             }
         } catch (Exception e) {
             log.error("Failed to broadcast message locally", e);

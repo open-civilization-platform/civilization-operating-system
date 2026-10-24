@@ -6,6 +6,7 @@ import io.github.opencivilizationplatform.modules.region.infrastructure.Resource
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ResourceRegionService {
@@ -50,6 +51,31 @@ public class ResourceRegionService {
         region.setClaimed(false);
         region.setClaimedByCivilizationId(null);
         return repository.save(region);
+    }
+
+    @Transactional
+    public ResourceRegion claimRegion(UUID sagaId, Long regionId, Long civilizationId) {
+        if (sagaId == null || civilizationId == null) throw new IllegalArgumentException("Saga and civilization are required");
+        ResourceRegion region = repository.findByIdForUpdate(regionId).orElseThrow();
+        if (Boolean.TRUE.equals(region.getClaimed())) {
+            if (civilizationId.equals(region.getClaimedByCivilizationId())) return region;
+            throw new IllegalStateException("Region is already claimed by another civilization");
+        }
+        region.setClaimed(true);
+        region.setClaimedByCivilizationId(civilizationId);
+        return repository.save(region);
+    }
+
+    @Transactional
+    public ResourceRegion compensateClaim(UUID sagaId, Long regionId, Long civilizationId) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        ResourceRegion region = repository.findByIdForUpdate(regionId).orElseThrow();
+        if (civilizationId != null && civilizationId.equals(region.getClaimedByCivilizationId())) {
+            region.setClaimed(false);
+            region.setClaimedByCivilizationId(null);
+            return repository.save(region);
+        }
+        return region;
     }
 
     @Transactional(readOnly = true)

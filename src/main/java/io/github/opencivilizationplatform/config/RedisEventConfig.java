@@ -6,6 +6,7 @@ import io.github.opencivilizationplatform.modules.nexus.domain.NexusNode;
 import io.github.opencivilizationplatform.modules.nexus.dto.NexusMessageSyncDTO;
 import io.github.opencivilizationplatform.modules.nexus.application.NexusMeshService;
 import io.github.opencivilizationplatform.web.handler.NexusWebSocketHandler;
+import io.github.opencivilizationplatform.saga.SagaProgressRedisSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ public class RedisEventConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RedisEventConfig.class);
     public static final String CHANNEL_NAME = "Nexus-mesh-events";
+    public static final String SAGA_PROGRESS_CHANNEL_NAME = "Nexus-saga-progress-events";
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
@@ -29,10 +31,13 @@ public class RedisEventConfig {
 
     @Bean
     public RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory,
-                                                   MessageListenerAdapter listenerAdapter) {
+                                                   MessageListenerAdapter listenerAdapter,
+                                                   SagaProgressRedisSubscriber sagaSubscriber) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(listenerAdapter, new ChannelTopic(CHANNEL_NAME));
+        container.addMessageListener(new MessageListenerAdapter(sagaSubscriber, "receiveMessage"),
+            new ChannelTopic(SAGA_PROGRESS_CHANNEL_NAME));
         return container;
     }
 

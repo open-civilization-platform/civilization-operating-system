@@ -5,10 +5,13 @@ import io.github.opencivilizationplatform.modules.nexus.domain.NexusNodeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface NexusNodeRepository extends JpaRepository<NexusNode, Long> {
     List<NexusNode> findByCivilizationId(Long civilizationId);
+    Optional<NexusNode> findBySagaId(UUID sagaId);
     List<NexusNode> findByStatus(NexusNodeStatus status);
     List<NexusNode> findByCivilizationIdAndType(Long civilizationId, NexusNodeType type);
 }

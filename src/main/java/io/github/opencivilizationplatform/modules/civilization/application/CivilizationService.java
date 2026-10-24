@@ -13,6 +13,7 @@ import io.github.opencivilizationplatform.modules.contribution.domain.CitizenWal
 import io.github.opencivilizationplatform.modules.contribution.domain.Role;
 import io.github.opencivilizationplatform.modules.contribution.infrastructure.CitizenRepository;
 import io.github.opencivilizationplatform.modules.contribution.infrastructure.CitizenWalletRepository;
+import io.github.opencivilizationplatform.saga.SagaExecutionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CivilizationService {
@@ -29,17 +32,20 @@ public class CivilizationService {
     private final RuleRepository ruleRepository;
     private final CitizenRepository citizenRepository;
     private final CitizenWalletRepository citizenWalletRepository;
+    private final SagaExecutionRepository sagaExecutionRepository;
 
     public CivilizationService(CivilizationRepository repository,
                                EventBus eventBus,
                                RuleRepository ruleRepository,
                                CitizenRepository citizenRepository,
-                               CitizenWalletRepository citizenWalletRepository) {
+                               CitizenWalletRepository citizenWalletRepository,
+                               SagaExecutionRepository sagaExecutionRepository) {
         this.repository = repository;
         this.eventBus = eventBus;
         this.ruleRepository = ruleRepository;
         this.citizenRepository = citizenRepository;
         this.citizenWalletRepository = citizenWalletRepository;
+        this.sagaExecutionRepository = sagaExecutionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +65,22 @@ public class CivilizationService {
 
     @Transactional
     public Civilization createCivilization(String name, CivilizationScale scale, String region, String ownerToken) {
+        return createCivilizationInternal(null, name, scale, region, ownerToken);
+    }
+
+    @Transactional
+    public Civilization createCivilization(UUID sagaId, String name, CivilizationScale scale, String region, String ownerToken) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        sagaExecutionRepository.lockForEffect(sagaId).orElseThrow(() ->
+            new IllegalArgumentException("Saga does not exist: " + sagaId));
+        Optional<Civilization> existing = repository.findBySagaId(sagaId);
+        if (existing.isPresent()) return existing.get();
+        return createCivilizationInternal(sagaId, name, scale, region, ownerToken);
+    }
+
+    private Civilization createCivilizationInternal(UUID sagaId, String name, CivilizationScale scale, String region, String ownerToken) {
         Civilization civ = new Civilization();
+        civ.setSagaId(sagaId);
         civ.setName(name);
         civ.setScale(scale);
         civ.setRegion(region);
@@ -76,6 +97,23 @@ public class CivilizationService {
         joinAsAgent(savedCiv.getId(), ownerToken);
 
         return savedCiv;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Civilization> findBySagaId(UUID sagaId) {
+        return repository.findBySagaId(sagaId);
+    }
+
+    @Transactional
+    public void compensateCreation(UUID sagaId) {
+        if (sagaId == null) throw new IllegalArgumentException("sagaId is required");
+        repository.findBySagaId(sagaId).ifPresent(civ -> {
+            if (civ.getStatus() != CivilizationStatus.FALLEN) {
+                civ.setStatus(CivilizationStatus.FALLEN);
+                civ.setLastActiveAt(LocalDateTime.now());
+                repository.save(civ);
+            }
+        });
     }
 
     @Transactional

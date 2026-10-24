@@ -5,10 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface CivilizationRepository extends JpaRepository<Civilization, Long> {
     List<Civilization> findByOwnerToken(String ownerToken);
     Optional<Civilization> findByName(String name);
+    Optional<Civilization> findBySagaId(UUID sagaId);
     List<Civilization> findByStatus(CivilizationStatus status);
 }
